@@ -10,9 +10,16 @@ void Rfid_Config::init() {
 
 void Rfid_Config::read() {
   if (mfrc522.detectTag()) {
-    char uid[20] = {0};
-    mfrc522.getUidString(uid);
-    lastUID = String(uid);
+    byte uid[10];
+    byte uidLength = mfrc522.getUid(uid);
+    String uidStr = "";
+    for (byte i = 0; i < uidLength; i++) {
+      if (i > 0) uidStr += ":";
+      if (uid[i] < 0x10) uidStr += "0";
+      uidStr += String(uid[i], HEX);
+    }
+    uidStr.toUpperCase();
+    lastUID = uidStr;
     Serial.println("Card UID: " + lastUID);
     mfrc522.unselectMifareTag();
   }
