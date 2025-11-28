@@ -2,8 +2,10 @@
 #define WEBSOCKET_CONFIG_H
 
 #include <WiFi.h>
-#include <WebSocketsServer.h>
+#include <ArduinoWebsockets.h>
 #include <Arduino.h>
+
+using namespace websockets;
 
 class Websocket_Config {
 public:
@@ -17,10 +19,12 @@ public:
 private:
   const char* _ssid;
   const char* _password;
-  WebSocketsServer _webSocket;
+  WebsocketsServer _webSocket;
   String _writeData;
   bool _hasWriteRequest;
-  void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
+  void onWebSocketMessage(WebsocketsClient &client, WebsocketsMessage message);
+  void onWebSocketEvent(WebsocketsClient &client, WebsocketsEvent event, String data);
+  std::vector<WebsocketsClient*> _clients;
 };
 
 #endif

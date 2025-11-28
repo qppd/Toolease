@@ -1,39 +1,97 @@
+
 # Toolease
 
-A comprehensive RFID-based tool leasing system built on ESP32 microcontroller with WebSocket communication capabilities. This project enables efficient tool management and tracking through RFID technology, providing real-time communication with client applications.
+A comprehensive RFID-based tool leasing system built on ESP32 with real-time WebSocket communication. Designed for efficient, secure, and scalable tool management in educational, industrial, and enterprise environments.
 
-## Description
+---
 
-Toolease is an IoT solution designed for tool leasing and management operations. The system utilizes ESP32 boards equipped with MFRC522 RFID readers to scan and manage tool identification tags. Communication is handled through WebSocket protocol, allowing seamless integration with mobile applications or web interfaces for real-time tool tracking, borrowing, and returning operations.
+## Table of Contents
 
-## Features
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Hardware Requirements](#hardware-requirements)
+- [Wiring Diagram](#wiring-diagram)
+- [Software Dependencies](#software-dependencies)
+- [Installation & Setup](#installation--setup)
+- [Configuration](#configuration)
+- [Operation Guide](#operation-guide)
+- [API & Communication](#api--communication)
+- [Testing & Validation](#testing--validation)
+- [Troubleshooting](#troubleshooting)
+- [Project Structure](#project-structure)
+- [Future Enhancements](#future-enhancements)
+- [Contributing](#contributing)
+- [Support & Contact](#support--contact)
+- [License](#license)
 
-- **RFID Reading and Writing**: Support for reading RFID tags and writing data to compatible cards
-- **WebSocket Communication**: Real-time bidirectional communication with client applications
-- **WiFi Connectivity**: Built-in access point and station modes for flexible networking
-- **Serial Command Interface**: Testing and debugging capabilities through serial commands
-- **Modular Architecture**: Separated RFID and WebSocket configurations for easy maintenance
-- **Cross-Platform Compatibility**: Designed to work with various client applications (Flutter, web, etc.)
+---
+
+## Overview
+
+Toolease is an IoT solution for tool leasing and management, leveraging ESP32 microcontrollers and RFID technology. It enables real-time tracking, borrowing, and returning of tools, with seamless integration to mobile and web clients via WebSocket.
+
+---
+
+## Key Features
+
+- **RFID Tag Reading/Writing** (EasyMFRC522)
+- **Real-Time WebSocket Communication**
+- **WiFi Access Point & Station Modes**
+- **Serial Command Interface for Debugging**
+- **Modular, Extensible Codebase**
+- **Cross-Platform Client Support (Flutter, Web, etc.)**
+
+---
+
+## System Architecture
+
+- **ESP32**: Central controller, RFID reader, WebSocket server
+- **RFID (MFRC522)**: Tag identification and data storage
+- **WebSocket**: Real-time, bidirectional communication with clients
+- **Clients**: Flutter app, web dashboard, or other WebSocket-capable interfaces
+
+---
 
 ## Hardware Requirements
 
 - ESP32 development board
 - MFRC522 RFID reader module
-- RFID cards/tags (MIFARE Classic compatible)
-- Power supply (USB or appropriate voltage source)
-- Connecting wires and breadboard (for prototyping)
+- MIFARE Classic RFID cards/tags
+- Power supply (USB or regulated 3.3V/5V)
+- Jumper wires, breadboard (for prototyping)
 
-## Software Requirements
+---
 
-- Arduino IDE 1.8.0 or later
-- ESP32 board support package for Arduino IDE
-- Required Arduino libraries:
-  - MFRC522 (by Miguel Balboa)
+## Wiring Diagram
+
+| MFRC522 Pin | ESP32 Pin (Example) |
+|-------------|--------------------|
+| SDA (SS)    | GPIO5              |
+| SCK         | GPIO18             |
+| MOSI        | GPIO23             |
+| MISO        | GPIO19             |
+| RST         | GPIO22             |
+| 3.3V        | 3.3V               |
+| GND         | GND                |
+
+> Adjust pins in code if your hardware setup differs.
+
+---
+
+## Software Dependencies
+
+- **Arduino IDE** (1.8.0+)
+- **ESP32 Board Support** (via Boards Manager)
+- **Libraries:**
+  - EasyMFRC522 (by pablo-sampaio, v0.2.2 recommended)
   - WebSockets (by Markus Sattler)
-  - WiFi
+  - WiFi (built-in)
   - Arduino core for ESP32
 
-## Installation
+---
+
+## Installation & Setup
 
 1. **Clone the repository:**
    ```bash
@@ -41,58 +99,65 @@ Toolease is an IoT solution designed for tool leasing and management operations.
    cd Toolease
    ```
 
-2. **Install Arduino IDE and ESP32 support:**
-   - Download and install Arduino IDE from https://www.arduino.cc/en/software
-   - Add ESP32 board support following the official guide: https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html
+2. **Install Arduino IDE & ESP32 support:**
+   - [Arduino IDE Download](https://www.arduino.cc/en/software)
+   - [ESP32 Board Setup Guide](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)
 
 3. **Install required libraries:**
-   - Open Arduino IDE
-   - Go to Sketch > Include Library > Manage Libraries
-   - Search for and install:
-     - "MFRC522" by Miguel Balboa
+   - Arduino IDE → Sketch → Include Library → Manage Libraries
+   - Search and install:
+     - "EasyMFRC522" by pablo-sampaio
      - "WebSockets" by Markus Sattler
 
-4. **Configure the project:**
-   - Open `source/esp32/Toolease/Toolease.ino` in Arduino IDE
-   - Modify WiFi credentials if needed (default: SSID "ESP32_RFID", password "password123")
-   - Adjust pin configurations in the code if your hardware setup differs
+4. **Open and configure the project:**
+   - Open `source/esp32/Toolease/Toolease.ino`
+   - Set WiFi credentials and pin assignments as needed
 
 5. **Upload to ESP32:**
-   - Select your ESP32 board in Tools > Board
-   - Choose the correct COM port in Tools > Port
-   - Click Upload button
+   - Select your ESP32 board and correct COM port
+   - Click Upload
 
-## Usage
+---
 
-### Basic Operation
+## Configuration
 
-1. Power on the ESP32 device
-2. The device will create a WiFi access point (default: "ESP32_RFID")
-3. Connect to the access point or ensure the device is on the same network
-4. Use a WebSocket client to connect to the device (default port: 81)
+- **WiFi Credentials:**  
+  Edit `Toolease.ino` to set your SSID and password.
+- **RFID Pins:**  
+  Adjust pin numbers in `Rfid_Config.h`/`.ino` to match your wiring.
+- **Library Version:**  
+  Use EasyMFRC522 v0.2.2 for best compatibility.
 
-### WebSocket Communication
+---
 
-The system uses WebSocket protocol for communication. Connect to `ws://<ESP32_IP>:81`
+## Operation Guide
 
-#### Message Types
+1. Power on the ESP32 device.
+2. Connect to the WiFi AP (default: `ESP32_RFID`).
+3. Use a WebSocket client to connect to `ws://<ESP32_IP>:81`.
+4. Scan RFID tags to trigger broadcasts.
+5. Use serial commands for testing/debugging.
+
+---
+
+## API & Communication
+
+### WebSocket Message Types
 
 - **RFID Scan Broadcast:**
   ```json
   {
     "type": "rfid_scan",
-    "uid": "ABC123456789"
+    "uid": "AA:BB:CC:DD"
   }
   ```
-
 - **Write Request:**
   ```json
   {
-    "action": "write",
+    "action": "write_tag",
     "data": "tool_data_here"
   }
   ```
-
 - **Write Response:**
   ```json
   {
@@ -101,12 +166,34 @@ The system uses WebSocket protocol for communication. Connect to `ws://<ESP32_IP
   }
   ```
 
-### Serial Commands (for testing)
+### RFID Usage
 
-Connect to the ESP32 via serial monitor (115200 baud) and use these commands:
+- UID is read using `getUidString()` (colon-separated hex).
+- Labeled data is managed with `writeFile`, `readFile`, `readFileSize`.
 
-- `test` - Send a test RFID scan message
-- `scan <uid>` - Send a specific UID scan message
+### Serial Commands
+
+- `test` — Send a test RFID scan message
+- `scan <uid>` — Send a specific UID scan message
+
+---
+
+## Testing & Validation
+
+- Use serial monitor (115200 baud) for command testing.
+- Validate RFID read/write with actual tags.
+- Test WebSocket communication with a client (e.g., browser, Flutter app).
+
+---
+
+## Troubleshooting
+
+- **No tag detected:** Check wiring, power, and tag type (MIFARE Classic).
+- **WebSocket not connecting:** Verify WiFi connection and correct port.
+- **Upload issues:** Ensure correct board/port selected in Arduino IDE.
+- **Library errors:** Confirm EasyMFRC522 and WebSockets are installed and up to date.
+
+---
 
 ## Project Structure
 
@@ -118,46 +205,47 @@ Toolease/
 ├── source/
 │   └── esp32/
 │       └── Toolease/
-│           ├── Toolease.ino          # Main Arduino sketch
-│           ├── Rfid_Config.cpp       # RFID module implementation
-│           ├── Rfid_Config.h         # RFID module header
-│           ├── Websocket_Config.cpp  # WebSocket module implementation
-│           └── Websocket_Config.h    # WebSocket module header
+│           ├── Toolease.ino
+│           ├── Rfid_Config.cpp/.h
+│           ├── Websocket_Config.cpp/.h
 └── wiring/
 ```
 
-## Development
+---
 
-### Code Style
+## Future Enhancements
 
-- Follow Arduino coding conventions
-- Use meaningful variable and function names
-- Include comments for complex logic
-- Maintain consistent indentation (2 spaces)
+- Cloud data sync and analytics
+- User authentication and access control
+- Mobile app with advanced features
+- Support for additional RFID hardware
+- Automated firmware updates
 
-### Testing
-
-- Use serial commands for basic functionality testing
-- Implement WebSocket client for integration testing
-- Test RFID reading/writing with actual hardware
+---
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+2. Create a feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -m 'Add YourFeature'`)
+4. Push to your branch (`git push origin feature/YourFeature`)
 5. Open a Pull Request
+
+---
+
+## Support & Contact
+
+- **Email:** quezon.province.pd@gmail.com
+- **GitHub:** [qppd](https://github.com/qppd)
+- **Portfolio:** [sajed-mendoza.onrender.com](https://sajed-mendoza.onrender.com)
+- **Facebook:** [qppd.dev](https://facebook.com/qppd.dev)
+- **Facebook Page:** [QUEZONPROVINCEDEVS](https://facebook.com/QUEZONPROVINCEDEVS)
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-- **Email:** quezon.province.pd@gmail.com
-- **GitHub:** https://github.com/qppd
-- **Portfolio:** https://sajed-mendoza.onrender.com
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 - **Facebook:** https://facebook.com/qppd.dev
 - **Facebook Page:** https://facebook.com/QUEZONPROVINCEDEVS
 

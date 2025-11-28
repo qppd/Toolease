@@ -1,8 +1,8 @@
 #ifndef RFID_CONFIG_H
 #define RFID_CONFIG_H
 
-#include &lt;MFRC522.h&gt;
-#include &lt;Arduino.h&gt;
+#include <EasyMFRC522.h>
+#include <Arduino.h>
 
 class Rfid_Config {
 public:
@@ -12,8 +12,11 @@ public:
   String getLastUID();
   void clearLastUID();
   bool writeData(String data);
+  void writeStringToTag(const String& label, const String& value);
+  int readStringSizeFromTag(const String& label);
+  String readStringFromTag(const String& label);
 private:
-  MFRC522 mfrc522;
+  EasyMFRC522 mfrc522;
   byte ss_pin, rst_pin;
   String lastUID;
 };

@@ -1,22 +1,20 @@
 #include "Rfid_Config.h"
-#include &lt;SPI.h&gt;
+#include <SPI.h>
 
 Rfid_Config::Rfid_Config(byte ss_pin, byte rst_pin) : ss_pin(ss_pin), rst_pin(rst_pin), mfrc522(ss_pin, rst_pin) {}
 
 void Rfid_Config::init() {
   SPI.begin();
-  mfrc522.PCD_Init();
+  mfrc522.init();
 }
 
 void Rfid_Config::read() {
-  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
-    lastUID = "";
-    for (byte i = 0; i < mfrc522.uid.size; i++) {
-      if (mfrc522.uid.uidByte[i] < 0x10) lastUID += "0";
-      lastUID += String(mfrc522.uid.uidByte[i], HEX);
-    }
+  if (mfrc522.detectTag()) {
+    char uid[20] = {0};
+    mfrc522.getUidString(uid);
+    lastUID = String(uid);
     Serial.println("Card UID: " + lastUID);
-    mfrc522.PICC_HaltA();
+    mfrc522.unselectMifareTag();
   }
 }
 
@@ -29,32 +27,56 @@ void Rfid_Config::clearLastUID() {
 }
 
 bool Rfid_Config::writeData(String data) {
-  if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
+  // Write to block 4 with label "mylabel" (as in the official example)
+  int result = mfrc522.writeFile(4, "mylabel", (byte*)data.c_str(), data.length() + 1);
+  if (result >= 0) {
+    Serial.println("Data written to tag: " + data);
+    return true;
+  } else {
+    Serial.println("Write failed, error code: " + String(result));
     return false;
   }
+}
 
-  MFRC522::MIFARE_Key key;
-  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF; // Default key
-
-  MFRC522::StatusCode status;
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 4, &key, &(mfrc522.uid));
-  if (status != MFRC522::STATUS_OK) {
-    Serial.println("Authentication failed");
-    mfrc522.PICC_HaltA();
-    return false;
+void Rfid_Config::writeStringToTag(const String& label, const String& value) {
+  int stringSize = value.length() + 1;
+  int result = mfrc522.writeFile(1, label.c_str(), (byte*)value.c_str(), stringSize);
+  if (result >= 0) {
+    Serial.print("Successfully written to the tag, ending in block ");
+    Serial.println(result);
+  } else {
+    Serial.print("Error writing to the tag: ");
+    Serial.println(result);
   }
+}
 
-  byte buffer[16] = {0};
-  data.getBytes(buffer, 16);
-
-  status = mfrc522.MIFARE_Write(4, buffer, 16);
-  if (status != MFRC522::STATUS_OK) {
-    Serial.println("Write failed");
-    mfrc522.PICC_HaltA();
-    return false;
+int Rfid_Config::readStringSizeFromTag(const String& label) {
+  int result = mfrc522.readFileSize(1, label.c_str());
+  if (result >= 0) {
+    Serial.print("Size of data chunk found in the tag: ");
+    Serial.print(result);
+    Serial.println(" bytes");
+  } else {
+    Serial.print("Error reading the tag (size): ");
+    Serial.println(result);
   }
+  return result;
+}
 
-  Serial.println("Data written to tag: " + data);
-  mfrc522.PICC_HaltA();
-  return true;
+String Rfid_Config::readStringFromTag(const String& label) {
+  char stringBuffer[100];
+  int result = mfrc522.readFile(1, label.c_str(), (byte*)stringBuffer, 100);
+  stringBuffer[99] = 0;
+  if (result >= 0) {
+    Serial.print("String data retrieved: ");
+    Serial.print(stringBuffer);
+    Serial.print(" (bytes: ");
+    Serial.print(result);
+    Serial.println(")");
+    return String(stringBuffer);
+  } else {
+    Serial.print("Error reading the tag (data): ");
+    Serial.println(result);
+    return "";
+  }
 }

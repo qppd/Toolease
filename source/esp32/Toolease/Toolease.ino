@@ -32,10 +32,10 @@ void loop() {
     if (rfid.writeData(data)) {
       Serial.println("Write successful");
       // Optionally send confirmation back to Flutter
-      ws.broadcastTXT("{\"action\":\"write_success\",\"data\":\"" + data + "\"}");
+      ws.broadcastUID("write_success:" + data);
     } else {
       Serial.println("Write failed");
-      ws.broadcastTXT("{\"action\":\"write_failed\"}");
+      ws.broadcastUID("write_failed");
     }
     ws.clearWriteRequest();
   }
@@ -51,8 +51,14 @@ void loop() {
       String testUid = command.substring(5);
       ws.broadcastUID(testUid);
       Serial.println("Sent RFID scan: " + testUid);
+    } else if (command == "w") {
+      rfid.writeStringToTag("mylabel", "Hello Tag! Just a random text!");
+    } else if (command == "s") {
+      rfid.readStringSizeFromTag("mylabel");
+    } else if (command == "r") {
+      rfid.readStringFromTag("mylabel");
     } else {
-      Serial.println("Unknown command. Available: test, scan <uid>");
+      Serial.println("Unknown command. Available: test, scan <uid>, w, s, r");
     }
   }
   
