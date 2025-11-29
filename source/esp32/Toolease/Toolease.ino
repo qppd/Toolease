@@ -5,7 +5,7 @@
 const char* ssid = "ESP32_RFID";
 const char* password = "password123";
 
-Rfid_Config rfid(5, 22); // SS_PIN 5, RST_PIN 22 for ESP32
+Rfid_Config rfid(5, 21); // SS_PIN 5, RST_PIN 21 for ESP32
 Websocket_Config ws(ssid, password);
 
 void setup() {

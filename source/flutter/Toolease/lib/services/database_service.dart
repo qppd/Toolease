@@ -103,6 +103,7 @@ class DatabaseService {
             storageId: i.storageId,
             totalQuantity: i.totalQuantity,
             availableQuantity: i.availableQuantity,
+            serialNo: i.serialNo,
             createdAt: i.createdAt,
           ),
         )
@@ -122,10 +123,41 @@ class DatabaseService {
             storageId: i.storageId,
             totalQuantity: i.totalQuantity,
             availableQuantity: i.availableQuantity,
+            serialNo: i.serialNo,
             createdAt: i.createdAt,
           ),
         )
         .toList();
+  }
+
+  Future<int> insertItem(models.Item item) async {
+    return await _database
+        .into(_database.items)
+        .insert(
+          ItemsCompanion(
+            name: Value(item.name),
+            description: Value(item.description),
+            storageId: Value(item.storageId),
+            totalQuantity: Value(item.totalQuantity),
+            availableQuantity: Value(item.availableQuantity),
+            serialNo: Value(item.serialNo),
+          ),
+        );
+  }
+
+  Future<void> updateItem(models.Item item) async {
+    await (_database.update(
+      _database.items,
+    )..where((i) => i.id.equals(item.id))).write(
+      ItemsCompanion(
+        name: Value(item.name),
+        description: Value(item.description),
+        storageId: Value(item.storageId),
+        totalQuantity: Value(item.totalQuantity),
+        availableQuantity: Value(item.availableQuantity),
+        serialNo: Value(item.serialNo),
+      ),
+    );
   }
 
   // Borrow Records
@@ -579,6 +611,7 @@ class DatabaseService {
             storageId: Value(item.storageId),
             totalQuantity: Value(item.totalQuantity),
             availableQuantity: Value(item.availableQuantity),
+            serialNo: Value(item.serialNo),
           ),
         );
   }
@@ -593,6 +626,7 @@ class DatabaseService {
         storageId: Value(item.storageId),
         totalQuantity: Value(item.totalQuantity),
         availableQuantity: Value(item.availableQuantity),
+        serialNo: Value(item.serialNo),
       ),
     );
   }

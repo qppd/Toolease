@@ -59,6 +59,7 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
     final availableQuantityController = TextEditingController(
       text: item?.availableQuantity.toString() ?? '',
     );
+    final serialNoController = TextEditingController(text: item?.serialNo ?? '');
     int? selectedStorageId = item?.storageId;
     final formKey = GlobalKey<FormState>();
 
@@ -181,6 +182,14 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: serialNoController,
+                          decoration: const InputDecoration(
+                            labelText: 'Serial Number',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
                         const SizedBox(
                           height: 24,
                         ), // Extra spacing for keyboard
@@ -215,6 +224,9 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                             availableQuantity: int.parse(
                               availableQuantityController.text,
                             ),
+                            serialNo: serialNoController.text.trim().isEmpty
+                                ? null
+                                : serialNoController.text.trim(),
                             createdAt: DateTime.now(),
                           );
                           await ref
@@ -235,6 +247,9 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                             availableQuantity: int.parse(
                               availableQuantityController.text,
                             ),
+                            serialNo: serialNoController.text.trim().isEmpty
+                                ? null
+                                : serialNoController.text.trim(),
                           );
                           await ref
                               .read(itemNotifierProvider.notifier)

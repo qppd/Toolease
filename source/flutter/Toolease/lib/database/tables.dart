@@ -23,6 +23,7 @@ class Items extends Table {
   IntColumn get storageId => integer().references(Storages, #id)();
   IntColumn get totalQuantity => integer()();
   IntColumn get availableQuantity => integer()();
+  TextColumn get serialNo => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 

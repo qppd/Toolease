@@ -12,28 +12,28 @@ bool Rfid_Config::detectTag() {
 
 String Rfid_Config::getUID() {
     String uid = "";
-    for (byte i = 0; i < _rfid.mfrc522.uid.size; i++) {
-        if (_rfid.mfrc522.uid.uidByte[i] < 0x10) uid += "0";
-        uid += String(_rfid.mfrc522.uid.uidByte[i], HEX);
+    for (byte i = 0; i < _rfid.getMFRC522()->uid.size; i++) {
+        if (_rfid.getMFRC522()->uid.uidByte[i] < 0x10) uid += "0";
+        uid += String(_rfid.getMFRC522()->uid.uidByte[i], HEX);
     }
     uid.toUpperCase();
     return uid;
 }
 
 int Rfid_Config::writeFile(String label, String data) {
-    int dataSize = data.length() + 1; // include null terminator
-    char buffer[dataSize];
-    data.toCharArray(buffer, dataSize);
-    return _rfid.writeFile(_block, label.c_str(), (byte*)buffer, dataSize);
+    int stringSize = data.length();
+    char stringBuffer[stringSize + 1];
+    strcpy(stringBuffer, data.c_str());
+    return _rfid.writeFile(_block, label.c_str(), (byte*)stringBuffer, stringSize + 1);
 }
 
 String Rfid_Config::readFile(String label) {
-    const int maxSize = 100;
-    char buffer[maxSize];
-    int result = _rfid.readFile(_block, label.c_str(), (byte*)buffer, maxSize);
+    const int MAX_STRING_SIZE = 100;
+    char stringBuffer[MAX_STRING_SIZE];
+    int result = _rfid.readFile(_block, label.c_str(), (byte*)stringBuffer, MAX_STRING_SIZE);
     if (result >= 0) {
-        buffer[maxSize - 1] = '\0'; // safety
-        return String(buffer);
+        stringBuffer[MAX_STRING_SIZE - 1] = '\0';
+        return String(stringBuffer);
     } else {
         return "";
     }

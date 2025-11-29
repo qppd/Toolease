@@ -72,7 +72,7 @@ Toolease is an IoT solution for tool leasing and management, leveraging ESP32 mi
 | SCK         | GPIO18             |
 | MOSI        | GPIO23             |
 | MISO        | GPIO19             |
-| RST         | GPIO22             |
+| RST         | GPIO21             |
 | 3.3V        | 3.3V               |
 | GND         | GND                |
 

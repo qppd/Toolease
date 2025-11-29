@@ -5,6 +5,7 @@ class Item {
   final int storageId;
   final int totalQuantity;
   final int availableQuantity;
+  final String? serialNo;
   final DateTime createdAt;
 
   const Item({
@@ -14,6 +15,7 @@ class Item {
     required this.storageId,
     required this.totalQuantity,
     required this.availableQuantity,
+    this.serialNo,
     required this.createdAt,
   });
 
@@ -24,6 +26,7 @@ class Item {
     int? storageId,
     int? totalQuantity,
     int? availableQuantity,
+    String? serialNo,
     DateTime? createdAt,
   }) {
     return Item(
@@ -33,6 +36,7 @@ class Item {
       storageId: storageId ?? this.storageId,
       totalQuantity: totalQuantity ?? this.totalQuantity,
       availableQuantity: availableQuantity ?? this.availableQuantity,
+      serialNo: serialNo ?? this.serialNo,
       createdAt: createdAt ?? this.createdAt,
     );
   }
