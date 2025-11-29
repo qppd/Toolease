@@ -71,3 +71,16 @@ void Websocket_Config::broadcastUID(String uid) {
     }
     Serial.println("Broadcasted UID: " + uid);
 }
+
+bool Websocket_Config::hasWriteRequest() {
+    return _hasWriteRequest;
+}
+
+String Websocket_Config::getWriteData() {
+    return _writeData;
+}
+
+void Websocket_Config::clearWriteRequest() {
+    _hasWriteRequest = false;
+    _writeData = "";
+}
