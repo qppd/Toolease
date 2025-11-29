@@ -43,35 +43,106 @@ class _ManageTagsScreenState extends ConsumerState<ManageTagsScreen> {
   }
 
   Future<void> _assignRFID(db.ItemUnit unit) async {
-    showDialog(
+    String? scannedRfid;
+    bool isScanning = true;
+    final rfidController = TextEditingController();
+
+    await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Scan RFID'),
-        content: const Text('Press OK to scan RFID tag.'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> startScan() async {
+              setState(() { isScanning = true; });
               try {
                 final rfid = await _wsService.scanRFID();
-                await ref.read(itemUnitProvider.notifier).updateItemUnitRFID(unit.id, rfid);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('RFID assigned: $rfid')),
-                  );
-                }
+                setState(() {
+                  scannedRfid = rfid;
+                  rfidController.text = rfid;
+                  isScanning = false;
+                });
               } catch (e) {
+                setState(() { isScanning = false; });
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error: $e')),
                   );
                 }
               }
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+            }
+
+            // Start scan only once when dialog is built
+            if (isScanning && scannedRfid == null) {
+              Future.microtask(startScan);
+            }
+
+            return AlertDialog(
+              title: const Text('Scan RFID'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.nfc, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          isScanning
+                              ? 'Waiting for RFID tag...'
+                              : (scannedRfid != null ? 'RFID tag scanned!' : 'Scan failed'),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 48,
+                    child: TextField(
+                      controller: rfidController,
+                      enabled: false,
+                      decoration: InputDecoration(
+                        labelText: 'RFID Tag',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.tag),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (isScanning)
+                    const Center(child: CircularProgressIndicator()),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: scannedRfid != null && !isScanning
+                      ? () async {
+                          Navigator.of(context).pop();
+                          await ref.read(itemUnitProvider.notifier).updateItemUnitRFID(unit.id, scannedRfid!);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('RFID assigned: $scannedRfid')),
+                            );
+                          }
+                        }
+                      : null,
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

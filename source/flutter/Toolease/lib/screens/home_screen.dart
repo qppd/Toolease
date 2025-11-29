@@ -9,6 +9,7 @@ import '../shared/widgets/app_card.dart';
 import '../providers/settings_provider.dart';
 import '../providers/borrow_record_provider.dart';
 import '../models/borrow_record.dart';
+import '../providers/websocket_connection_provider.dart';
 import 'student_user_manual_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -53,6 +54,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final connected = ref.watch(websocketConnectionProvider);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        connected ? Icons.wifi : Icons.wifi_off,
+                        color: connected ? AppColors.success : AppColors.error,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        connected ? 'Connected to ESP32' : 'Not connected to ESP32',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: connected ? AppColors.success : AppColors.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2,

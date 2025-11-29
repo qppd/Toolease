@@ -6,6 +6,7 @@ import '../providers/item_provider.dart';
 import '../providers/borrow_record_provider.dart';
 import '../core/design_system.dart';
 import '../shared/widgets/app_card.dart';
+import '../providers/websocket_connection_provider.dart';
 import 'manage_storages_screen.dart';
 import 'manage_items_screen.dart';
 import 'manage_students_screen.dart';
@@ -108,58 +109,74 @@ class AdminDashboardScreen extends ConsumerWidget {
   }
 
   Widget _buildWelcomeHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: AppColors.gradientPrimary,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.onPrimary.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
+    return Consumer(
+      builder: (context, ref, _) {
+        final connected = ref.watch(websocketConnectionProvider);
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: AppColors.gradientPrimary,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: const Icon(
-              Icons.dashboard_outlined,
-              color: AppColors.onPrimary,
-              size: 32,
-            ),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome Back, Admin',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.onPrimary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Manage your inventory system',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onPrimary.withValues(alpha: 0.9),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
+                child: const Icon(
+                  Icons.dashboard_outlined,
+                  color: AppColors.onPrimary,
+                  size: 32,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome Back, Admin',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Icon(
+                          connected ? Icons.wifi : Icons.wifi_off,
+                          color: connected ? AppColors.success : AppColors.error,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          connected ? 'Connected to ESP32' : 'Not connected to ESP32',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.onPrimary.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
