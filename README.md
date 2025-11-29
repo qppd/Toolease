@@ -114,6 +114,13 @@ The project includes 3D printable models for the RFID hardware casing, designed 
   - **Material:** PLA+  
   - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
 
+- **Tablet Cover**  
+  ![Tablet Cover](models/Toolease_Tablet_Cover.png)  
+  Protective cover for the tablet used as the interface for the Toolease Flutter app, providing durability and a professional look.  
+  - **STL File:** Download from [Thingiverse](https://www.thingiverse.com/thing:7216344)  
+  - **Material:** PLA+  
+  - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
+
 ### Assembled View
 
 - **All Parts Joined**  
@@ -253,7 +260,8 @@ Toolease/
 │   ├── Toolease_Bracket.png
 │   ├── Toolease_Case_Cover.png
 │   ├── Toolease_Port_Cover.png
-│   └── Toolease_Rfid_Casing_All_Parts_Joined.png
+│   ├── Toolease_Rfid_Casing_All_Parts_Joined.png
+│   └── Toolease_Tablet_Cover.png
 ├── source/
 │   └── esp32/
 │       └── Toolease/
