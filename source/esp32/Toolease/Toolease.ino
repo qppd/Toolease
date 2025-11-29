@@ -1,3 +1,4 @@
+#include <EasyMFRC522.h>
 #include "Rfid_Config.h"
 #include "Websocket_Config.h"
 
@@ -9,58 +10,49 @@ Websocket_Config ws(ssid, password);
 
 void setup() {
   Serial.begin(115200);
-  ws.init();
   rfid.init();
+  ws.init();
+ 
   Serial.println("RFID and WebSocket systems initialized.");
-  Serial.println("Available commands:");
-  Serial.println("  test - Send test RFID scan");
-  Serial.println("  scan <uid> - Send specific UID scan");
+  Serial.println("ESP32 is ready to scan RFID tags.");
 }
 
 void loop() {
-  ws.loop();
-  rfid.read();
-  String uid = rfid.getLastUID();
-  if (uid != "") {
+  ws.loop(); // Handle WebSocket connections and messages
+
+  // Check for RFID tag
+  if (rfid.detectTag()) {
+    Serial.println("RFID tag detected!");
+    String uid = rfid.getUID();
+    Serial.println("UID: " + uid);
     ws.broadcastUID(uid);
-    rfid.clearLastUID();
+    rfid.unselectTag();
+    delay(1000); // Prevent multiple reads
   }
-  
-  // Handle write requests from Flutter
+
+  // Check for write request from WebSocket
   if (ws.hasWriteRequest()) {
-    String data = ws.getWriteData();
-    if (rfid.writeData(data)) {
-      Serial.println("Write successful");
-      // Optionally send confirmation back to Flutter
-      ws.broadcastUID("write_success:" + data);
-    } else {
-      Serial.println("Write failed");
-      ws.broadcastUID("write_failed");
+    String writeData = ws.getWriteData();
+    Serial.println("Processing write request: " + writeData);
+    // Assume writeData is in format "label:data"
+    int colonIndex = writeData.indexOf(':');
+    if (colonIndex != -1) {
+      String label = writeData.substring(0, colonIndex);
+      String data = writeData.substring(colonIndex + 1);
+      if (rfid.detectTag()) {
+        int result = rfid.writeFile(label, data);
+        if (result >= 0) {
+          Serial.println("Data written successfully to tag.");
+        } else {
+          Serial.println("Error writing to tag: " + String(result));
+        }
+        rfid.unselectTag();
+      } else {
+        Serial.println("No tag detected for writing.");
+      }
     }
     ws.clearWriteRequest();
   }
-  
-  // Handle serial commands for testing
-  if (Serial.available()) {
-    String command = Serial.readStringUntil('\n');
-    command.trim();
-    if (command == "test") {
-      ws.broadcastUID("test123456");
-      Serial.println("Sent test RFID scan: test123456");
-    } else if (command.startsWith("scan ")) {
-      String testUid = command.substring(5);
-      ws.broadcastUID(testUid);
-      Serial.println("Sent RFID scan: " + testUid);
-    } else if (command == "w") {
-      rfid.writeStringToTag("mylabel", "Hello Tag! Just a random text!");
-    } else if (command == "s") {
-      rfid.readStringSizeFromTag("mylabel");
-    } else if (command == "r") {
-      rfid.readStringFromTag("mylabel");
-    } else {
-      Serial.println("Unknown command. Available: test, scan <uid>, w, s, r");
-    }
-  }
-  
-  delay(1000);
+
+  delay(100); // Small delay to prevent overwhelming the loop
 }

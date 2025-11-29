@@ -12,6 +12,7 @@ A comprehensive RFID-based tool leasing system built on ESP32 with real-time Web
 - [System Architecture](#system-architecture)
 - [Hardware Requirements](#hardware-requirements)
 - [Wiring Diagram](#wiring-diagram)
+- [3D Models](#3d-models)
 - [Software Dependencies](#software-dependencies)
 - [Installation & Setup](#installation--setup)
 - [Configuration](#configuration)
@@ -76,6 +77,51 @@ Toolease is an IoT solution for tool leasing and management, leveraging ESP32 mi
 | GND         | GND                |
 
 > Adjust pins in code if your hardware setup differs.
+
+---
+
+## 3D Models
+
+The project includes 3D printable models for the RFID hardware casing, designed in Fusion 360 for easy assembly and protection of the ESP32 and MFRC522 components. These models are available in STL format for 3D printing and include visual previews. Tested with Creality Ender V3 SE printer using PLA+ filament.
+
+### Individual Parts
+
+- **Board Case**  
+  ![Board Case](models/Toolease_Board_Case.png)  
+  The main enclosure that houses the ESP32 board, providing structural support and protection.  
+  - **STL File:** [Toolease_Board_Case.stl](models/Toolease_Board_Case.stl)  
+  - **Material:** PLA+  
+  - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
+
+- **Bracket**  
+  ![Bracket](models/Toolease_Bracket.png)  
+  Mounting bracket for securely attaching the MFRC522 RFID reader module.  
+  - **STL File:** [Toolease_Bracket.stl](models/Toolease_Bracket.stl)  
+  - **Material:** PLA+  
+  - **Print Settings:** 0.2mm layer height, 30% infill, supports not required, bed 60°C, nozzle 210°C  
+
+- **Case Cover**  
+  ![Case Cover](models/Toolease_Case_Cover.png)  
+  Top cover for the board case, providing access to components and additional protection.  
+  - **STL File:** [Toolease_Case_Cover.stl](models/Toolease_Case_Cover.stl)  
+  - **Material:** PLA+  
+  - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
+
+- **Port Cover**  
+  ![Port Cover](models/Toolease_Port_Cover.png)  
+  Protective cover for the ESP32's USB and other ports, preventing dust and damage.  
+  - **STL File:** [Toolease_Port_Cover.stl](models/Toolease_Port_Cover.stl)  
+  - **Material:** PLA+  
+  - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
+
+### Assembled View
+
+- **All Parts Joined**  
+  ![All Parts Joined](models/Toolease_Rfid_Casing_All_Parts_Joined.png)  
+  Complete assembly view showing how all individual parts fit together to form the full RFID casing. This model ensures proper alignment and fitment of all components.  
+  - **Note:** This is a visual assembly guide; print individual STL files for actual parts.  
+
+These 3D models are optimized for standard 3D printers and can be customized using software like Fusion 360. Ensure proper fitment with your specific ESP32 and MFRC522 modules before final assembly.
 
 ---
 
@@ -202,6 +248,15 @@ Toolease/
 ├── LICENSE
 ├── README.md
 ├── models/
+│   ├── Toolease_Board_Case.png
+│   ├── Toolease_Board_Case.stl
+│   ├── Toolease_Bracket.png
+│   ├── Toolease_Bracket.stl
+│   ├── Toolease_Case_Cover.png
+│   ├── Toolease_Case_Cover.stl
+│   ├── Toolease_Port_Cover.png
+│   ├── Toolease_Port_Cover.stl
+│   └── Toolease_Rfid_Casing_All_Parts_Joined.png
 ├── source/
 │   └── esp32/
 │       └── Toolease/

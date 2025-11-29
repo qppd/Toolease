@@ -24,7 +24,7 @@ private:
   bool _hasWriteRequest;
   void onWebSocketMessage(WebsocketsClient &client, WebsocketsMessage message);
   void onWebSocketEvent(WebsocketsClient &client, WebsocketsEvent event, String data);
-  std::vector<WebsocketsClient*> _clients;
+  std::vector<WebsocketsClient> _clients;
 };
 
 #endif

@@ -6,19 +6,17 @@
 
 class Rfid_Config {
 public:
-  Rfid_Config(byte ss_pin, byte rst_pin);
-  void init();
-  void read();
-  String getLastUID();
-  void clearLastUID();
-  bool writeData(String data);
-  void writeStringToTag(const String& label, const String& value);
-  int readStringSizeFromTag(const String& label);
-  String readStringFromTag(const String& label);
+    Rfid_Config(int ssPin, int rstPin);
+    void init();
+    bool detectTag();
+    String getUID();
+    int writeFile(String label, String data);
+    String readFile(String label);
+    int getFileSize(String label);
+    void unselectTag();
 private:
-  EasyMFRC522 mfrc522;
-  byte ss_pin, rst_pin;
-  String lastUID;
+    EasyMFRC522 _rfid;
+    int _block = 1; // default block
 };
 
 #endif

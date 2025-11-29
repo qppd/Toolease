@@ -1,0 +1,9 @@
+# Ignore 3D printing files
+*.stl
+*.gcode
+
+# Other common ignores
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
