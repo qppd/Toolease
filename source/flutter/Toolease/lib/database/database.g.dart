@@ -761,7 +761,8 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     aliasedName,
     false,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _availableQuantityMeta = const VerificationMeta(
     'availableQuantity',
@@ -772,7 +773,8 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     aliasedName,
     false,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -844,8 +846,6 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
           _totalQuantityMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_totalQuantityMeta);
     }
     if (data.containsKey('available_quantity')) {
       context.handle(
@@ -855,8 +855,6 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
           _availableQuantityMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_availableQuantityMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -1079,13 +1077,11 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     required String name,
     this.description = const Value.absent(),
     required int storageId,
-    required int totalQuantity,
-    required int availableQuantity,
+    this.totalQuantity = const Value.absent(),
+    this.availableQuantity = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name),
-       storageId = Value(storageId),
-       totalQuantity = Value(totalQuantity),
-       availableQuantity = Value(availableQuantity);
+       storageId = Value(storageId);
   static Insertable<Item> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -1162,6 +1158,355 @@ class ItemsCompanion extends UpdateCompanion<Item> {
           ..write('storageId: $storageId, ')
           ..write('totalQuantity: $totalQuantity, ')
           ..write('availableQuantity: $availableQuantity, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ItemUnitsTable extends ItemUnits
+    with TableInfo<$ItemUnitsTable, ItemUnit> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemUnitsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES items (id)',
+    ),
+  );
+  static const VerificationMeta _serialNoMeta = const VerificationMeta(
+    'serialNo',
+  );
+  @override
+  late final GeneratedColumn<String> serialNo = GeneratedColumn<String>(
+    'serial_no',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    itemId,
+    serialNo,
+    status,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_units';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemUnit> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('serial_no')) {
+      context.handle(
+        _serialNoMeta,
+        serialNo.isAcceptableOrUnknown(data['serial_no']!, _serialNoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serialNoMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemUnit map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemUnit(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}item_id'],
+      )!,
+      serialNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}serial_no'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ItemUnitsTable createAlias(String alias) {
+    return $ItemUnitsTable(attachedDatabase, alias);
+  }
+}
+
+class ItemUnit extends DataClass implements Insertable<ItemUnit> {
+  final int id;
+  final int itemId;
+  final String serialNo;
+  final String status;
+  final DateTime createdAt;
+  const ItemUnit({
+    required this.id,
+    required this.itemId,
+    required this.serialNo,
+    required this.status,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['item_id'] = Variable<int>(itemId);
+    map['serial_no'] = Variable<String>(serialNo);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ItemUnitsCompanion toCompanion(bool nullToAbsent) {
+    return ItemUnitsCompanion(
+      id: Value(id),
+      itemId: Value(itemId),
+      serialNo: Value(serialNo),
+      status: Value(status),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ItemUnit.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemUnit(
+      id: serializer.fromJson<int>(json['id']),
+      itemId: serializer.fromJson<int>(json['itemId']),
+      serialNo: serializer.fromJson<String>(json['serialNo']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'itemId': serializer.toJson<int>(itemId),
+      'serialNo': serializer.toJson<String>(serialNo),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  ItemUnit copyWith({
+    int? id,
+    int? itemId,
+    String? serialNo,
+    String? status,
+    DateTime? createdAt,
+  }) => ItemUnit(
+    id: id ?? this.id,
+    itemId: itemId ?? this.itemId,
+    serialNo: serialNo ?? this.serialNo,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ItemUnit copyWithCompanion(ItemUnitsCompanion data) {
+    return ItemUnit(
+      id: data.id.present ? data.id.value : this.id,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      serialNo: data.serialNo.present ? data.serialNo.value : this.serialNo,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemUnit(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('serialNo: $serialNo, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, itemId, serialNo, status, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemUnit &&
+          other.id == this.id &&
+          other.itemId == this.itemId &&
+          other.serialNo == this.serialNo &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt);
+}
+
+class ItemUnitsCompanion extends UpdateCompanion<ItemUnit> {
+  final Value<int> id;
+  final Value<int> itemId;
+  final Value<String> serialNo;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  const ItemUnitsCompanion({
+    this.id = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.serialNo = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  ItemUnitsCompanion.insert({
+    this.id = const Value.absent(),
+    required int itemId,
+    required String serialNo,
+    required String status,
+    this.createdAt = const Value.absent(),
+  }) : itemId = Value(itemId),
+       serialNo = Value(serialNo),
+       status = Value(status);
+  static Insertable<ItemUnit> custom({
+    Expression<int>? id,
+    Expression<int>? itemId,
+    Expression<String>? serialNo,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (itemId != null) 'item_id': itemId,
+      if (serialNo != null) 'serial_no': serialNo,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  ItemUnitsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? itemId,
+    Value<String>? serialNo,
+    Value<String>? status,
+    Value<DateTime>? createdAt,
+  }) {
+    return ItemUnitsCompanion(
+      id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
+      serialNo: serialNo ?? this.serialNo,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<int>(itemId.value);
+    }
+    if (serialNo.present) {
+      map['serial_no'] = Variable<String>(serialNo.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemUnitsCompanion(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('serialNo: $serialNo, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2916,6 +3261,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StudentsTable students = $StudentsTable(this);
   late final $StoragesTable storages = $StoragesTable(this);
   late final $ItemsTable items = $ItemsTable(this);
+  late final $ItemUnitsTable itemUnits = $ItemUnitsTable(this);
   late final $BorrowRecordsTable borrowRecords = $BorrowRecordsTable(this);
   late final $BorrowItemsTable borrowItems = $BorrowItemsTable(this);
   late final $BorrowItemConditionsTable borrowItemConditions =
@@ -2930,6 +3276,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     students,
     storages,
     items,
+    itemUnits,
     borrowRecords,
     borrowItems,
     borrowItemConditions,
@@ -3530,8 +3877,8 @@ typedef $$ItemsTableCreateCompanionBuilder =
       required String name,
       Value<String?> description,
       required int storageId,
-      required int totalQuantity,
-      required int availableQuantity,
+      Value<int> totalQuantity,
+      Value<int> availableQuantity,
       Value<DateTime> createdAt,
     });
 typedef $$ItemsTableUpdateCompanionBuilder =
@@ -3563,6 +3910,24 @@ final class $$ItemsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$ItemUnitsTable, List<ItemUnit>>
+  _itemUnitsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.itemUnits,
+    aliasName: $_aliasNameGenerator(db.items.id, db.itemUnits.itemId),
+  );
+
+  $$ItemUnitsTableProcessedTableManager get itemUnitsRefs {
+    final manager = $$ItemUnitsTableTableManager(
+      $_db,
+      $_db.itemUnits,
+    ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_itemUnitsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 
@@ -3644,6 +4009,31 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
           ),
     );
     return composer;
+  }
+
+  Expression<bool> itemUnitsRefs(
+    Expression<bool> Function($$ItemUnitsTableFilterComposer f) f,
+  ) {
+    final $$ItemUnitsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.itemUnits,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemUnitsTableFilterComposer(
+            $db: $db,
+            $table: $db.itemUnits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> borrowItemsRefs(
@@ -3791,6 +4181,31 @@ class $$ItemsTableAnnotationComposer
     return composer;
   }
 
+  Expression<T> itemUnitsRefs<T extends Object>(
+    Expression<T> Function($$ItemUnitsTableAnnotationComposer a) f,
+  ) {
+    final $$ItemUnitsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.itemUnits,
+      getReferencedColumn: (t) => t.itemId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemUnitsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.itemUnits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> borrowItemsRefs<T extends Object>(
     Expression<T> Function($$BorrowItemsTableAnnotationComposer a) f,
   ) {
@@ -3830,7 +4245,11 @@ class $$ItemsTableTableManager
           $$ItemsTableUpdateCompanionBuilder,
           (Item, $$ItemsTableReferences),
           Item,
-          PrefetchHooks Function({bool storageId, bool borrowItemsRefs})
+          PrefetchHooks Function({
+            bool storageId,
+            bool itemUnitsRefs,
+            bool borrowItemsRefs,
+          })
         > {
   $$ItemsTableTableManager(_$AppDatabase db, $ItemsTable table)
     : super(
@@ -3867,8 +4286,8 @@ class $$ItemsTableTableManager
                 required String name,
                 Value<String?> description = const Value.absent(),
                 required int storageId,
-                required int totalQuantity,
-                required int availableQuantity,
+                Value<int> totalQuantity = const Value.absent(),
+                Value<int> availableQuantity = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => ItemsCompanion.insert(
                 id: id,
@@ -3886,10 +4305,15 @@ class $$ItemsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({storageId = false, borrowItemsRefs = false}) {
+              ({
+                storageId = false,
+                itemUnitsRefs = false,
+                borrowItemsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (itemUnitsRefs) db.itemUnits,
                     if (borrowItemsRefs) db.borrowItems,
                   ],
                   addJoins:
@@ -3926,6 +4350,23 @@ class $$ItemsTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (itemUnitsRefs)
+                        await $_getPrefetchedData<Item, $ItemsTable, ItemUnit>(
+                          currentTable: table,
+                          referencedTable: $$ItemsTableReferences
+                              ._itemUnitsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ItemsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).itemUnitsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.itemId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (borrowItemsRefs)
                         await $_getPrefetchedData<
                           Item,
@@ -3967,7 +4408,323 @@ typedef $$ItemsTableProcessedTableManager =
       $$ItemsTableUpdateCompanionBuilder,
       (Item, $$ItemsTableReferences),
       Item,
-      PrefetchHooks Function({bool storageId, bool borrowItemsRefs})
+      PrefetchHooks Function({
+        bool storageId,
+        bool itemUnitsRefs,
+        bool borrowItemsRefs,
+      })
+    >;
+typedef $$ItemUnitsTableCreateCompanionBuilder =
+    ItemUnitsCompanion Function({
+      Value<int> id,
+      required int itemId,
+      required String serialNo,
+      required String status,
+      Value<DateTime> createdAt,
+    });
+typedef $$ItemUnitsTableUpdateCompanionBuilder =
+    ItemUnitsCompanion Function({
+      Value<int> id,
+      Value<int> itemId,
+      Value<String> serialNo,
+      Value<String> status,
+      Value<DateTime> createdAt,
+    });
+
+final class $$ItemUnitsTableReferences
+    extends BaseReferences<_$AppDatabase, $ItemUnitsTable, ItemUnit> {
+  $$ItemUnitsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ItemsTable _itemIdTable(_$AppDatabase db) => db.items.createAlias(
+    $_aliasNameGenerator(db.itemUnits.itemId, db.items.id),
+  );
+
+  $$ItemsTableProcessedTableManager get itemId {
+    final $_column = $_itemColumn<int>('item_id')!;
+
+    final manager = $$ItemsTableTableManager(
+      $_db,
+      $_db.items,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ItemUnitsTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemUnitsTable> {
+  $$ItemUnitsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serialNo => $composableBuilder(
+    column: $table.serialNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ItemsTableFilterComposer get itemId {
+    final $$ItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.items,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.items,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ItemUnitsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemUnitsTable> {
+  $$ItemUnitsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serialNo => $composableBuilder(
+    column: $table.serialNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ItemsTableOrderingComposer get itemId {
+    final $$ItemsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.items,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsTableOrderingComposer(
+            $db: $db,
+            $table: $db.items,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ItemUnitsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemUnitsTable> {
+  $$ItemUnitsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get serialNo =>
+      $composableBuilder(column: $table.serialNo, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ItemsTableAnnotationComposer get itemId {
+    final $$ItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.itemId,
+      referencedTable: $db.items,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.items,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ItemUnitsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemUnitsTable,
+          ItemUnit,
+          $$ItemUnitsTableFilterComposer,
+          $$ItemUnitsTableOrderingComposer,
+          $$ItemUnitsTableAnnotationComposer,
+          $$ItemUnitsTableCreateCompanionBuilder,
+          $$ItemUnitsTableUpdateCompanionBuilder,
+          (ItemUnit, $$ItemUnitsTableReferences),
+          ItemUnit,
+          PrefetchHooks Function({bool itemId})
+        > {
+  $$ItemUnitsTableTableManager(_$AppDatabase db, $ItemUnitsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemUnitsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemUnitsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemUnitsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> itemId = const Value.absent(),
+                Value<String> serialNo = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ItemUnitsCompanion(
+                id: id,
+                itemId: itemId,
+                serialNo: serialNo,
+                status: status,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int itemId,
+                required String serialNo,
+                required String status,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ItemUnitsCompanion.insert(
+                id: id,
+                itemId: itemId,
+                serialNo: serialNo,
+                status: status,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ItemUnitsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({itemId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (itemId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.itemId,
+                                referencedTable: $$ItemUnitsTableReferences
+                                    ._itemIdTable(db),
+                                referencedColumn: $$ItemUnitsTableReferences
+                                    ._itemIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ItemUnitsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemUnitsTable,
+      ItemUnit,
+      $$ItemUnitsTableFilterComposer,
+      $$ItemUnitsTableOrderingComposer,
+      $$ItemUnitsTableAnnotationComposer,
+      $$ItemUnitsTableCreateCompanionBuilder,
+      $$ItemUnitsTableUpdateCompanionBuilder,
+      (ItemUnit, $$ItemUnitsTableReferences),
+      ItemUnit,
+      PrefetchHooks Function({bool itemId})
     >;
 typedef $$BorrowRecordsTableCreateCompanionBuilder =
     BorrowRecordsCompanion Function({
@@ -5617,6 +6374,8 @@ class $AppDatabaseManager {
       $$StoragesTableTableManager(_db, _db.storages);
   $$ItemsTableTableManager get items =>
       $$ItemsTableTableManager(_db, _db.items);
+  $$ItemUnitsTableTableManager get itemUnits =>
+      $$ItemUnitsTableTableManager(_db, _db.itemUnits);
   $$BorrowRecordsTableTableManager get borrowRecords =>
       $$BorrowRecordsTableTableManager(_db, _db.borrowRecords);
   $$BorrowItemsTableTableManager get borrowItems =>

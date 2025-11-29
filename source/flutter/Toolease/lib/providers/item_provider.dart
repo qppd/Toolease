@@ -38,9 +38,18 @@ class ItemNotifier extends StateNotifier<AsyncValue<List<Item>>> {
     await _loadItems();
   }
 
-  Future<void> addItem(Item item) async {
+  Future<void> addItem(String name, String? description, int storageId, int totalQty, int availableQty) async {
     try {
       final databaseService = _ref.read(databaseServiceProvider);
+      final item = Item(
+        id: 0, // Will be set by auto-increment
+        name: name,
+        description: description,
+        storageId: storageId,
+        totalQuantity: totalQty,
+        availableQuantity: availableQty,
+        createdAt: DateTime.now(),
+      );
       await databaseService.insertItem(item);
       await refreshItems();
       _ref.invalidate(allItemsProvider);
@@ -51,9 +60,18 @@ class ItemNotifier extends StateNotifier<AsyncValue<List<Item>>> {
     }
   }
 
-  Future<void> updateItem(Item item) async {
+  Future<void> updateItem(int itemId, String name, String? description, int storageId, int totalQty, int availableQty) async {
     try {
       final databaseService = _ref.read(databaseServiceProvider);
+      final item = Item(
+        id: itemId,
+        name: name,
+        description: description,
+        storageId: storageId,
+        totalQuantity: totalQty,
+        availableQuantity: availableQty,
+        createdAt: DateTime.now(), // This might not be used in update
+      );
       await databaseService.updateItem(item);
       await refreshItems();
       _ref.invalidate(allItemsProvider);

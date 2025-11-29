@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/tag_provider.dart';
-import '../models/tag.dart' as models;
+import '../providers/item_unit_provider.dart';
+import '../providers/item_provider.dart';
+import '../database/database.dart' as db;
+import '../models/item.dart' as models;
+import '../services/websocket_service.dart';
+import '../providers/database_provider.dart';
 import '../core/design_system.dart';
+import '../shared/widgets/app_card.dart';
 
 class ManageTagsScreen extends ConsumerStatefulWidget {
   const ManageTagsScreen({super.key});
@@ -12,346 +17,359 @@ class ManageTagsScreen extends ConsumerStatefulWidget {
 }
 
 class _ManageTagsScreenState extends ConsumerState<ManageTagsScreen> {
+  final WebSocketService _wsService = WebSocketService();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   @override
+  void initState() {
+    super.initState();
+    _wsService.connect();
+  }
+
+  @override
   void dispose() {
+    _wsService.disconnect();
     _searchController.dispose();
     super.dispose();
   }
 
-  List<models.Tag> _getFilteredTags(List<models.Tag> tags) {
-    if (_searchQuery.isEmpty) return tags;
-    return tags.where((tag) {
-      return tag.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             (tag.description?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+  List<db.ItemUnit> _getFilteredItemUnits(List<db.ItemUnit> itemUnits) {
+    if (_searchQuery.isEmpty) return itemUnits;
+    return itemUnits.where((unit) {
+      return unit.serialNo.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+             unit.id.toString().contains(_searchQuery);
     }).toList();
   }
 
-  Future<void> _showTagDialog({models.Tag? tag}) async {
-    final nameController = TextEditingController(text: tag?.name ?? '');
-    final descriptionController = TextEditingController(text: tag?.description ?? '');
-    final colorController = TextEditingController(text: tag?.color ?? '');
-    final formKey = GlobalKey<FormState>();
-
-    return showDialog<void>(
+  Future<void> _assignRFID(db.ItemUnit unit) async {
+    showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(tag == null ? 'Add Tag' : 'Edit Tag'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tag Name',
-                      hintText: 'Enter tag name',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a tag name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description (Optional)',
-                      hintText: 'Enter tag description',
-                    ),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    controller: colorController,
-                    decoration: const InputDecoration(
-                      labelText: 'Color (Optional)',
-                      hintText: 'Hex color code (e.g., #FF5733)',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (formKey.currentState!.validate()) {
-                  final tagNotifier = ref.read(tagNotifierProvider.notifier);
-                  try {
-                    if (tag == null) {
-                      // Add new tag
-                      final newTag = models.Tag(
-                        id: 0, // Will be set by database
-                        name: nameController.text.trim(),
-                        description: descriptionController.text.trim().isEmpty
-                            ? null
-                            : descriptionController.text.trim(),
-                        color: colorController.text.trim().isEmpty
-                            ? null
-                            : colorController.text.trim(),
-                        createdAt: DateTime.now(),
-                      );
-                      await tagNotifier.addTag(newTag);
-                    } else {
-                      // Update existing tag
-                      final updatedTag = tag.copyWith(
-                        name: nameController.text.trim(),
-                        description: descriptionController.text.trim().isEmpty
-                            ? null
-                            : descriptionController.text.trim(),
-                        color: colorController.text.trim().isEmpty
-                            ? null
-                            : colorController.text.trim(),
-                      );
-                      await tagNotifier.updateTag(updatedTag);
-                    }
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(tag == null ? 'Tag added successfully' : 'Tag updated successfully'),
-                          backgroundColor: AppColors.success,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: ${e.toString()}'),
-                          backgroundColor: AppColors.error,
-                        ),
-                      );
-                    }
-                  }
+      builder: (context) => AlertDialog(
+        title: const Text('Scan RFID'),
+        content: const Text('Press OK to scan RFID tag.'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              try {
+                final rfid = await _wsService.scanRFID();
+                await ref.read(itemUnitProvider.notifier).updateItemUnitRFID(unit.id, rfid);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('RFID assigned: $rfid')),
+                  );
                 }
-              },
-              child: Text(tag == null ? 'Add' : 'Update'),
-            ),
-          ],
-        );
-      },
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _deleteTag(models.Tag tag) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Tag'),
-          content: Text('Are you sure you want to delete "${tag.name}"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: AppColors.onError,
-              ),
-              child: const Text('Delete'),
-            ),
-          ],
+  Future<void> _createUnitsForExistingItems() async {
+    try {
+      final databaseService = ref.read(databaseServiceProvider);
+      await databaseService.createUnitsForExistingItems();
+      await ref.read(itemUnitProvider.notifier).refreshItemUnits();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Item units created successfully!')),
         );
-      },
-    );
-
-    if (confirmed == true) {
-      try {
-        final tagNotifier = ref.read(tagNotifierProvider.notifier);
-        await tagNotifier.deleteTag(tag.id);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Tag deleted successfully'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final tagsAsync = ref.watch(tagNotifierProvider);
+    final itemUnitsAsync = ref.watch(itemUnitProvider);
+    final itemsAsync = ref.watch(itemNotifierProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text('Manage Tags'),
+        title: const Text(
+          'Manage RFID Tags',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.onPrimary,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showTagDialog(),
-            tooltip: 'Add Tag',
-          ),
-        ],
       ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search tags...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
-          ),
-
-          // Tags list
-          Expanded(
-            child: tagsAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-              error: (error, stack) => Center(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header Section
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                    const SizedBox(height: AppSpacing.md),
                     Text(
-                      'Error loading tags',
-                      style: TextStyle(color: AppColors.textPrimary),
+                      'RFID Tag Management',
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      error.toString(),
-                      style: TextStyle(color: AppColors.textSecondary),
-                      textAlign: TextAlign.center,
+                      'Assign and manage RFID tags for your inventory items',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    ElevatedButton(
-                      onPressed: () => ref.invalidate(tagNotifierProvider),
-                      child: const Text('Retry'),
+
+                    // Search Section
+                    AppCard(
+                      variant: AppCardVariant.outlined,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.search_outlined, color: AppColors.primary),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                'Search',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Search by RFID tag or unit ID...',
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: AppColors.textSecondary,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                borderSide: BorderSide(color: AppColors.outline),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                borderSide: BorderSide(color: AppColors.outline),
+                              ),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(Icons.clear, color: AppColors.textSecondary),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() {
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                    )
+                                  : null,
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              data: (tags) {
-                final filteredTags = _getFilteredTags(tags);
-
-                if (filteredTags.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _searchQuery.isEmpty ? Icons.tag : Icons.search_off,
-                          size: 64,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          _searchQuery.isEmpty
-                              ? 'No tags found'
-                              : 'No tags match your search',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (_searchQuery.isEmpty) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          ElevatedButton.icon(
-                            onPressed: () => _showTagDialog(),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add First Tag'),
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  itemCount: filteredTags.length,
-                  itemBuilder: (context, index) {
-                    final tag = filteredTags[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: tag.color != null
-                              ? Color(int.parse(tag.color!.replaceFirst('#', ''), radix: 16) | 0xFF000000)
-                              : AppColors.primary,
-                          child: Text(
-                            tag.name.substring(0, 1).toUpperCase(),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        title: Text(
-                          tag.name,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle: tag.description != null && tag.description!.isNotEmpty
-                            ? Text(tag.description!)
-                            : null,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () => _showTagDialog(tag: tag),
-                              tooltip: 'Edit Tag',
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () => _deleteTag(tag),
-                              tooltip: 'Delete Tag',
-                              color: AppColors.error,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
             ),
+
+            const SizedBox(height: 16),
+
+            // Item Units List
+            Expanded(
+              child: itemUnitsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error, size: 60, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text('Error: $error'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => ref
+                            .read(itemUnitProvider.notifier)
+                            .refreshItemUnits(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+                data: (itemUnits) => itemUnits.isEmpty
+                    ? itemsAsync.maybeWhen(
+                        data: (items) => items.isNotEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.inventory_2_outlined, size: 80, color: AppColors.textSecondary),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    Text(
+                                      'No item units found',
+                                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Text(
+                                      'Items exist but no units have been created yet.',
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    ElevatedButton.icon(
+                                      onPressed: _createUnitsForExistingItems,
+                                      icon: const Icon(Icons.add),
+                                      label: const Text('Create Item Units'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        foregroundColor: AppColors.onPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.inventory_2_outlined, size: 80, color: AppColors.textSecondary),
+                                    const SizedBox(height: AppSpacing.lg),
+                                    Text(
+                                      'No item units found',
+                                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Text(
+                                      'Add items first to create item units for RFID tagging.',
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        orElse: () => const Center(child: CircularProgressIndicator()),
+                      )
+                    : itemsAsync.when(
+                        data: (items) => RefreshIndicator(
+                          onRefresh: () => ref.read(itemUnitProvider.notifier).refreshItemUnits(),
+                          child: _buildItemUnitsList(_getFilteredItemUnits(itemUnits), items),
+                        ),
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) => Center(child: Text('Error loading items: $error')),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemUnitsList(List<db.ItemUnit> itemUnits, List<models.Item> items) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      itemCount: itemUnits.length,
+      itemBuilder: (context, index) {
+        final unit = itemUnits[index];
+        final item = items.firstWhere((i) => i.id == unit.itemId);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: _buildItemUnitCard(unit, item),
+        );
+      },
+    );
+  }
+
+  Widget _buildItemUnitCard(db.ItemUnit unit, models.Item item) {
+    final hasRFID = unit.serialNo.isNotEmpty;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: hasRFID ? AppColors.success.withValues(alpha: 0.1) : AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(
+                  hasRFID ? Icons.nfc : Icons.nfc_outlined,
+                  color: hasRFID ? AppColors.success : AppColors.warning,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${item.name} - Unit ${unit.id}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      hasRFID ? 'RFID: ${unit.serialNo}' : 'RFID: Not Assigned',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: hasRFID ? AppColors.success : AppColors.warning,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _assignRFID(unit),
+                icon: const Icon(Icons.nfc),
+                label: Text(hasRFID ? 'Update RFID' : 'Assign RFID'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -8,7 +8,7 @@ import '../models/borrow_record.dart' as models;
 import '../core/design_system.dart';
 import '../shared/widgets/app_scaffold.dart';
 import '../shared/widgets/app_card.dart';
-import '../shared/widgets/confirmation_dialog.dart';
+import '../services/websocket_service.dart';
 
 class ReturnScreen extends ConsumerStatefulWidget {
   const ReturnScreen({super.key});
@@ -85,22 +85,241 @@ class _ReturnScreenState extends ConsumerState<ReturnScreen> {
   Future<void> _showReturnConfirmation() async {
     if (_selectedStudent == null || _activeBorrows.isEmpty) return;
 
-    final confirmed = await showConfirmationDialog(
-      context: context,
-      title: 'Confirm Return',
-      titleIcon: Icons.assignment_return_rounded,
-      content: _buildReturnSummary(),
-      confirmButtonText: 'Confirm Return',
-      confirmButtonColor: AppColors.accent,
-    );
+    final confirmed = await _showReturnConfirmationDialog();
 
     if (confirmed == true && mounted) {
       await _returnItems();
     }
   }
 
-  Widget _buildReturnSummary() {
-    // Calculate totals
+  Future<bool?> _showReturnConfirmationDialog() async {
+    final wsService = WebSocketService();
+    wsService.connect();
+
+    // Collect all items being returned
+    final itemsToReturn = <models.BorrowItem>[];
+    for (final record in _activeBorrows) {
+      itemsToReturn.addAll(record.items);
+    }
+
+    final scannedSerials = <int, String>{}; // itemId -> serial
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          // Listen to WebSocket
+          wsService.stream?.listen((message) {
+            if (message is String) {
+              try {
+                // Parse JSON message from ESP32
+                final data = message;
+                if (data.contains('"action":"rfid_scan"') && data.contains('"uid"')) {
+                  final uidStart = data.indexOf('"uid":"') + 7;
+                  final uidEnd = data.indexOf('"', uidStart);
+                  if (uidStart != -1 && uidEnd != -1) {
+                    final rfid = data.substring(uidStart, uidEnd);
+                    // Find the first unscanned item
+                    for (final item in itemsToReturn) {
+                      if (!scannedSerials.containsKey(item.itemId)) {
+                        setState(() {
+                          scannedSerials[item.itemId] = rfid;
+                        });
+                        break;
+                      }
+                    }
+                  }
+                }
+              } catch (e) {
+                // Ignore invalid messages
+              }
+            }
+          });
+
+          final allScanned = itemsToReturn.every((item) => scannedSerials.containsKey(item.itemId));
+
+          return AlertDialog(
+            title: const Text('Confirm Return - Scan RFID Tags'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Please scan the RFID tag for each item to confirm returning.',
+                    style: AppTypography.bodyMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  // Student Details
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Student Details',
+                          style: AppTypography.labelLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text('Name: ${_selectedStudent!.name}', style: AppTypography.bodyMedium),
+                        Text('ID: ${_selectedStudent!.studentId}', style: AppTypography.bodyMedium),
+                        Text('Year: ${_selectedStudent!.yearLevel} | Section: ${_selectedStudent!.section}',
+                          style: AppTypography.bodyMedium),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  // Items Summary
+                  Text(
+                    'Items to Return',
+                    style: AppTypography.labelLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ...itemsToReturn.map((item) {
+                    final scanned = scannedSerials.containsKey(item.itemId);
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: scanned ? AppColors.success.withValues(alpha: 0.1) : AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        border: Border.all(
+                          color: scanned ? AppColors.success : AppColors.outline,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Item ID: ${item.itemId}', // Assuming item name not available, or fetch it
+                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          Text('Quantity: ${item.quantity}', style: AppTypography.bodySmall),
+                          const SizedBox(height: AppSpacing.xs),
+                          TextFormField(
+                            initialValue: scannedSerials[item.itemId] ?? '',
+                            enabled: false,
+                            decoration: InputDecoration(
+                              labelText: 'RFID Serial Number',
+                              border: const OutlineInputBorder(),
+                              filled: true,
+                              fillColor: scanned ? AppColors.success.withValues(alpha: 0.1) : AppColors.surface,
+                            ),
+                          ),
+                          if (!scanned)
+                            Text(
+                              'Scan RFID tag to populate',
+                              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+                            ),
+                        ],
+                      ),
+                    );
+                  }),
+                  // Add the totals from _buildReturnSummary
+                  const SizedBox(height: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Return Summary',
+                          style: AppTypography.labelLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        // Calculate totals
+                        Builder(
+                          builder: (context) {
+                            int totalItems = 0;
+                            int goodItems = 0;
+                            int damagedItems = 0;
+                            int lostItems = 0;
+
+                            for (final record in _activeBorrows) {
+                              for (final item in record.items) {
+                                totalItems += item.quantity;
+                                final conditions = _quantityConditions[item.itemId] ?? [];
+                                for (final condition in conditions) {
+                                  switch (condition) {
+                                    case models.ItemCondition.good:
+                                      goodItems++;
+                                      break;
+                                    case models.ItemCondition.damaged:
+                                      damagedItems++;
+                                      break;
+                                    case models.ItemCondition.lost:
+                                      lostItems++;
+                                      break;
+                                  }
+                                }
+                              }
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Total Items: $totalItems', style: AppTypography.bodyMedium),
+                                Text('Good: $goodItems', style: AppTypography.bodyMedium),
+                                Text('Damaged: $damagedItems', style: AppTypography.bodyMedium),
+                                Text('Lost: $lostItems', style: AppTypography.bodyMedium),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  wsService.disconnect();
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: allScanned
+                    ? () {
+                        wsService.disconnect();
+                        Navigator.of(context).pop(true);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: AppColors.onPrimary,
+                ),
+                child: const Text('Confirm Return'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildConditionChip(String label, Color color) {
     int totalItems = 0;
     int goodItems = 0;
     int damagedItems = 0;
@@ -357,28 +576,6 @@ class _ReturnScreenState extends ConsumerState<ReturnScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildConditionChip(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        label,
-        style: AppTypography.labelSmall.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: 10,
-        ),
-      ),
     );
   }
 

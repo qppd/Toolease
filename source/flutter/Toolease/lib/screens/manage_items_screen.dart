@@ -53,13 +53,8 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
     final descriptionController = TextEditingController(
       text: item?.description ?? '',
     );
-    final totalQuantityController = TextEditingController(
-      text: item?.totalQuantity.toString() ?? '',
-    );
-    final availableQuantityController = TextEditingController(
-      text: item?.availableQuantity.toString() ?? '',
-    );
-    final serialNoController = TextEditingController(text: item?.serialNo ?? '');
+    final totalQtyController = TextEditingController(text: item?.totalQuantity.toString() ?? '');
+    final availableQtyController = TextEditingController(text: item?.availableQuantity.toString() ?? '');
     int? selectedStorageId = item?.storageId;
     final formKey = GlobalKey<FormState>();
 
@@ -141,7 +136,7 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: totalQuantityController,
+                          controller: totalQtyController,
                           decoration: const InputDecoration(
                             labelText: 'Total Quantity',
                             border: OutlineInputBorder(),
@@ -151,16 +146,16 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter total quantity';
                             }
-                            final quantity = int.tryParse(value);
-                            if (quantity == null || quantity <= 0) {
-                              return 'Please enter a valid quantity';
+                            final qty = int.tryParse(value.trim());
+                            if (qty == null || qty <= 0) {
+                              return 'Please enter a valid positive number';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: availableQuantityController,
+                          controller: availableQtyController,
                           decoration: const InputDecoration(
                             labelText: 'Available Quantity',
                             border: OutlineInputBorder(),
@@ -170,25 +165,16 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter available quantity';
                             }
-                            final quantity = int.tryParse(value);
-                            if (quantity == null || quantity < 0) {
-                              return 'Please enter a valid quantity';
+                            final qty = int.tryParse(value.trim());
+                            if (qty == null || qty < 0) {
+                              return 'Please enter a valid non-negative number';
                             }
-                            final totalQuantity =
-                                int.tryParse(totalQuantityController.text) ?? 0;
-                            if (quantity > totalQuantity) {
+                            final totalQty = int.tryParse(totalQtyController.text.trim());
+                            if (totalQty != null && qty > totalQty) {
                               return 'Available quantity cannot exceed total quantity';
                             }
                             return null;
                           },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: serialNoController,
-                          decoration: const InputDecoration(
-                            labelText: 'Serial Number',
-                            border: OutlineInputBorder(),
-                          ),
                         ),
                         const SizedBox(
                           height: 24,
@@ -208,52 +194,25 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                     if (formKey.currentState!.validate() &&
                         selectedStorageId != null) {
                       try {
+                        final totalQty = int.parse(totalQtyController.text.trim());
+                        final availableQty = int.parse(availableQtyController.text.trim());
                         if (item == null) {
-                          // Add new item
-                          final newItem = models.Item(
-                            id: 0,
-                            name: nameController.text.trim(),
-                            description:
-                                descriptionController.text.trim().isEmpty
-                                ? null
-                                : descriptionController.text.trim(),
-                            storageId: selectedStorageId!,
-                            totalQuantity: int.parse(
-                              totalQuantityController.text,
-                            ),
-                            availableQuantity: int.parse(
-                              availableQuantityController.text,
-                            ),
-                            serialNo: serialNoController.text.trim().isEmpty
-                                ? null
-                                : serialNoController.text.trim(),
-                            createdAt: DateTime.now(),
+                          await ref.read(itemNotifierProvider.notifier).addItem(
+                            nameController.text.trim(),
+                            descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim(),
+                            selectedStorageId!,
+                            totalQty,
+                            availableQty,
                           );
-                          await ref
-                              .read(itemNotifierProvider.notifier)
-                              .addItem(newItem);
                         } else {
-                          // Update existing item
-                          final updatedItem = item.copyWith(
-                            name: nameController.text.trim(),
-                            description:
-                                descriptionController.text.trim().isEmpty
-                                ? null
-                                : descriptionController.text.trim(),
-                            storageId: selectedStorageId!,
-                            totalQuantity: int.parse(
-                              totalQuantityController.text,
-                            ),
-                            availableQuantity: int.parse(
-                              availableQuantityController.text,
-                            ),
-                            serialNo: serialNoController.text.trim().isEmpty
-                                ? null
-                                : serialNoController.text.trim(),
+                          await ref.read(itemNotifierProvider.notifier).updateItem(
+                            item.id,
+                            nameController.text.trim(),
+                            descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim(),
+                            selectedStorageId!,
+                            totalQty,
+                            availableQty,
                           );
-                          await ref
-                              .read(itemNotifierProvider.notifier)
-                              .updateItem(updatedItem);
                         }
 
                         if (context.mounted) {

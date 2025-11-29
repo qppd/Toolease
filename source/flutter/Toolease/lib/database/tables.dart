@@ -21,9 +21,16 @@ class Items extends Table {
   TextColumn get name => text()();
   TextColumn get description => text().nullable()();
   IntColumn get storageId => integer().references(Storages, #id)();
-  IntColumn get totalQuantity => integer()();
-  IntColumn get availableQuantity => integer()();
-  TextColumn get serialNo => text().nullable()();
+  IntColumn get totalQuantity => integer().withDefault(const Constant(0))();
+  IntColumn get availableQuantity => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class ItemUnits extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get itemId => integer().references(Items, #id)();
+  TextColumn get serialNo => text()();
+  TextColumn get status => text()(); // 'available', 'borrowed', 'damaged', 'lost'
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 

@@ -10,6 +10,7 @@ import '../core/design_system.dart';
 import '../shared/widgets/app_scaffold.dart';
 import '../shared/widgets/app_card.dart';
 import '../shared/widgets/confirmation_dialog.dart';
+import '../services/websocket_service.dart';
 
 class BorrowScreen extends ConsumerStatefulWidget {
   const BorrowScreen({super.key});
@@ -119,24 +120,18 @@ class _BorrowScreenState extends ConsumerState<BorrowScreen> {
   Future<void> _showBorrowConfirmation() async {
     if (_selectedStudent == null || _selectedItems.isEmpty) return;
 
-    final confirmed = await showConfirmationDialog(
-      context: context,
-      title: 'Confirm Borrow',
-      titleIcon: Icons.shopping_cart_checkout,
-      content: _buildBorrowSummary(),
-      confirmButtonText: 'Confirm Borrow',
-      confirmButtonColor: AppColors.primary,
-    );
+    final confirmed = await _showBorrowConfirmationDialog();
 
     if (confirmed == true && mounted) {
       await _createBorrowRecord();
     }
   }
 
-  Widget _buildBorrowSummary() {
-    final totalItems = _selectedItems.values.fold(0, (sum, qty) => sum + qty);
+  Future<bool?> _showBorrowConfirmationDialog() async {
+    final wsService = WebSocketService();
+    wsService.connect();
 
-    // Get item details for selected items
+    // Get selected item details
     final selectedItemDetails = <models.Item>[];
     for (final entry in _selectedItems.entries) {
       for (final items in _itemsByStorage.values) {
@@ -151,136 +146,254 @@ class _BorrowScreenState extends ConsumerState<BorrowScreen> {
       }
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Student Information
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Student Details',
-                style: AppTypography.labelLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text('Name: ${_selectedStudent!.name}', style: AppTypography.bodyMedium),
-              Text('ID: ${_selectedStudent!.studentId}', style: AppTypography.bodyMedium),
-              Text('Year: ${_selectedStudent!.yearLevel} | Section: ${_selectedStudent!.section}',
-                style: AppTypography.bodyMedium),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
+    final scannedSerials = <int, String>{}; // itemId -> serial
 
-        // Items Summary
-        Text(
-          'Items to Borrow',
-          style: AppTypography.labelLarge.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          // Listen to WebSocket
+          wsService.stream?.listen((message) {
+            if (message is String) {
+              try {
+                // Parse JSON message from ESP32
+                final data = message; // Assuming it's '{"action":"rfid_scan","uid":"123"}'
+                if (data.contains('"action":"rfid_scan"') && data.contains('"uid"')) {
+                  final uidStart = data.indexOf('"uid":"') + 7;
+                  final uidEnd = data.indexOf('"', uidStart);
+                  if (uidStart != -1 && uidEnd != -1) {
+                    final rfid = data.substring(uidStart, uidEnd);
+                    // Find the first unscanned item
+                    for (final item in selectedItemDetails) {
+                      if (!scannedSerials.containsKey(item.id)) {
+                        setState(() {
+                          scannedSerials[item.id] = rfid;
+                        });
+                        break;
+                      }
+                    }
+                  }
+                }
+              } catch (e) {
+                // Ignore invalid messages
+              }
+            }
+          });
 
-        ...selectedItemDetails.map((item) {
-          final quantity = _selectedItems[item.id] ?? 0;
-          return Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              border: Border.all(color: AppColors.outline.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (item.description?.isNotEmpty == true)
+          final allScanned = selectedItemDetails.every((item) => scannedSerials.containsKey(item.id));
+
+          return AlertDialog(
+            title: const Text('Confirm Borrow - Scan RFID Tags'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Student Information
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          item.description!,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
+                          'Student Details',
+                          style: AppTypography.labelLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                    ],
+                        const SizedBox(height: AppSpacing.xs),
+                        Text('Name: ${_selectedStudent!.name}', style: AppTypography.bodyMedium),
+                        Text('ID: ${_selectedStudent!.studentId}', style: AppTypography.bodyMedium),
+                        Text('Year: ${_selectedStudent!.yearLevel} | Section: ${_selectedStudent!.section}',
+                          style: AppTypography.bodyMedium),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Text(
-                    'Qty: $quantity',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.primary,
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Items Summary
+                  Text(
+                    'Items to Borrow',
+                    style: AppTypography.labelLarge.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+                  const SizedBox(height: AppSpacing.sm),
 
-        const SizedBox(height: AppSpacing.md),
+                  ...selectedItemDetails.map((item) {
+                    final quantity = _selectedItems[item.id] ?? 0;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(color: AppColors.outline.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (item.description?.isNotEmpty == true)
+                                  Text(
+                                    item.description!,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: AppSpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: Text(
+                              'Qty: $quantity',
+                              style: AppTypography.labelMedium.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
 
-        // Total Summary
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Total Items',
-                style: AppTypography.labelLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Total Summary
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Total Items',
+                          style: AppTypography.labelLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          _selectedItems.values.fold(0, (sum, qty) => sum + qty).toString(),
+                          style: AppTypography.h6.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  Text(
+                    'Please scan the RFID tag for each item to confirm borrowing.',
+                    style: AppTypography.bodyMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ...selectedItemDetails.map((item) {
+                    final quantity = _selectedItems[item.id] ?? 0;
+                    final scanned = scannedSerials.containsKey(item.id);
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: scanned ? AppColors.success.withValues(alpha: 0.1) : AppColors.surface,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        border: Border.all(
+                          color: scanned ? AppColors.success : AppColors.outline,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          Text('Quantity: $quantity', style: AppTypography.bodySmall),
+                          const SizedBox(height: AppSpacing.xs),
+                          TextFormField(
+                            initialValue: scannedSerials[item.id] ?? '',
+                            enabled: false,
+                            decoration: InputDecoration(
+                              labelText: 'RFID Serial Number',
+                              border: const OutlineInputBorder(),
+                              filled: true,
+                              fillColor: scanned ? AppColors.success.withValues(alpha: 0.1) : AppColors.surface,
+                            ),
+                          ),
+                          if (!scanned)
+                            Text(
+                              'Scan RFID tag to populate',
+                              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+                            ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
               ),
-              Text(
-                totalItems.toString(),
-                style: AppTypography.h6.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  wsService.disconnect();
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: allScanned
+                    ? () {
+                        wsService.disconnect();
+                        Navigator.of(context).pop(true);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
                 ),
+                child: const Text('Confirm Borrow'),
               ),
             ],
-          ),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
+
+
 
   Future<void> _createBorrowRecord() async {
     if (_selectedStudent == null || _selectedItems.isEmpty) return;

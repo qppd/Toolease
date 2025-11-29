@@ -4,29 +4,21 @@ import 'tables.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [Students, Storages, Items, BorrowRecords, BorrowItems, BorrowItemConditions, Settings, Tags])
+@DriftDatabase(tables: [Students, Storages, Items, ItemUnits, BorrowRecords, BorrowItems, BorrowItemConditions, Settings, Tags])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
         },
-        onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 3) {
-            // Add serialNo column to Items table
-            await m.addColumn(items, items.serialNo);
-          }
-        },
       );
 
   static QueryExecutor _openConnection() {
-    // Temporarily changed database name to force recreation with new schema
-    // Change back to 'toolease_db' after testing
-    return driftDatabase(name: 'toolease_db_v2');
+    return driftDatabase(name: 'toolease_db_v4');
   }
 }

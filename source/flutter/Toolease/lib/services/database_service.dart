@@ -103,7 +103,6 @@ class DatabaseService {
             storageId: i.storageId,
             totalQuantity: i.totalQuantity,
             availableQuantity: i.availableQuantity,
-            serialNo: i.serialNo,
             createdAt: i.createdAt,
           ),
         )
@@ -123,7 +122,6 @@ class DatabaseService {
             storageId: i.storageId,
             totalQuantity: i.totalQuantity,
             availableQuantity: i.availableQuantity,
-            serialNo: i.serialNo,
             createdAt: i.createdAt,
           ),
         )
@@ -131,7 +129,7 @@ class DatabaseService {
   }
 
   Future<int> insertItem(models.Item item) async {
-    return await _database
+    final itemId = await _database
         .into(_database.items)
         .insert(
           ItemsCompanion(
@@ -140,9 +138,21 @@ class DatabaseService {
             storageId: Value(item.storageId),
             totalQuantity: Value(item.totalQuantity),
             availableQuantity: Value(item.availableQuantity),
-            serialNo: Value(item.serialNo),
           ),
         );
+    
+    // Create item units
+    for (int i = 0; i < item.totalQuantity; i++) {
+      await _database.into(_database.itemUnits).insert(
+        ItemUnitsCompanion(
+          itemId: Value(itemId),
+          serialNo: const Value(''),
+          status: const Value('available'),
+        ),
+      );
+    }
+    
+    return itemId;
   }
 
   Future<void> updateItem(models.Item item) async {
@@ -155,7 +165,6 @@ class DatabaseService {
         storageId: Value(item.storageId),
         totalQuantity: Value(item.totalQuantity),
         availableQuantity: Value(item.availableQuantity),
-        serialNo: Value(item.serialNo),
       ),
     );
   }
@@ -601,36 +610,6 @@ class DatabaseService {
   }
 
   // Item management
-  Future<int> insertItem(models.Item item) async {
-    return await _database
-        .into(_database.items)
-        .insert(
-          ItemsCompanion(
-            name: Value(item.name),
-            description: Value(item.description),
-            storageId: Value(item.storageId),
-            totalQuantity: Value(item.totalQuantity),
-            availableQuantity: Value(item.availableQuantity),
-            serialNo: Value(item.serialNo),
-          ),
-        );
-  }
-
-  Future<void> updateItem(models.Item item) async {
-    await (_database.update(
-      _database.items,
-    )..where((i) => i.id.equals(item.id))).write(
-      ItemsCompanion(
-        name: Value(item.name),
-        description: Value(item.description),
-        storageId: Value(item.storageId),
-        totalQuantity: Value(item.totalQuantity),
-        availableQuantity: Value(item.availableQuantity),
-        serialNo: Value(item.serialNo),
-      ),
-    );
-  }
-
   Future<void> deleteItem(int itemId) async {
     await (_database.delete(
       _database.items,
@@ -1272,5 +1251,60 @@ class DatabaseService {
     return await (_database.delete(_database.tags)
           ..where((t) => t.id.equals(tagId)))
         .go();
+  }
+
+  // Item Units
+  Future<List<ItemUnit>> getAllItemUnits() async {
+    return await _database.select(_database.itemUnits).get();
+  }
+
+  Future<List<ItemUnit>> getItemUnits(int itemId) async {
+    return await (_database.select(_database.itemUnits)..where((iu) => iu.itemId.equals(itemId))).get();
+  }
+
+  Future<void> updateItemUnitRFID(int unitId, String rfid) async {
+    await (_database.update(_database.itemUnits)..where((iu) => iu.id.equals(unitId))).write(
+      ItemUnitsCompanion(serialNo: Value(rfid)),
+    );
+  }
+
+  Future<void> insertItemWithUnits(String name, String? description, int storageId, List<String> serialNos) async {
+    final itemId = await _database.into(_database.items).insert(
+      ItemsCompanion(
+        name: Value(name),
+        description: Value(description),
+        storageId: Value(storageId),
+        totalQuantity: Value(serialNos.length),
+        availableQuantity: Value(serialNos.length),
+      ),
+    );
+    for (final serialNo in serialNos) {
+      await _database.into(_database.itemUnits).insert(
+        ItemUnitsCompanion(
+          itemId: Value(itemId),
+          serialNo: Value(serialNo),
+          status: const Value('available'),
+        ),
+      );
+    }
+  }
+
+  Future<void> createUnitsForExistingItems() async {
+    final items = await getAllItems();
+    for (final item in items) {
+      final existingUnits = await getItemUnits(item.id);
+      if (existingUnits.isEmpty) {
+        // Create units for this item
+        for (int i = 0; i < item.totalQuantity; i++) {
+          await _database.into(_database.itemUnits).insert(
+            ItemUnitsCompanion(
+              itemId: Value(item.id),
+              serialNo: const Value(''),
+              status: const Value('available'),
+            ),
+          );
+        }
+      }
+    }
   }
 }

@@ -16,7 +16,7 @@ void setup() {
   Serial.println("RFID and WebSocket systems initialized.");
   Serial.println("ESP32 is ready to scan RFID tags.");
 }
-
+                       
 void loop() {
   ws.loop(); // Handle WebSocket connections and messages
 
