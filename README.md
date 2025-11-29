@@ -89,28 +89,28 @@ The project includes 3D printable models for the RFID hardware casing, designed 
 - **Board Case**  
   ![Board Case](models/Toolease_Board_Case.png)  
   The main enclosure that houses the ESP32 board, providing structural support and protection.  
-  - **STL File:** [Toolease_Board_Case.stl](models/Toolease_Board_Case.stl)  
+  - **STL File:** Download from [Thingiverse](https://www.thingiverse.com/thing:7216344)  
   - **Material:** PLA+  
   - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
 
 - **Bracket**  
   ![Bracket](models/Toolease_Bracket.png)  
   Mounting bracket for securely attaching the MFRC522 RFID reader module.  
-  - **STL File:** [Toolease_Bracket.stl](models/Toolease_Bracket.stl)  
+  - **STL File:** Download from [Thingiverse](https://www.thingiverse.com/thing:7216344)  
   - **Material:** PLA+  
   - **Print Settings:** 0.2mm layer height, 30% infill, supports not required, bed 60°C, nozzle 210°C  
 
 - **Case Cover**  
   ![Case Cover](models/Toolease_Case_Cover.png)  
   Top cover for the board case, providing access to components and additional protection.  
-  - **STL File:** [Toolease_Case_Cover.stl](models/Toolease_Case_Cover.stl)  
+  - **STL File:** Download from [Thingiverse](https://www.thingiverse.com/thing:7216344)  
   - **Material:** PLA+  
   - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
 
 - **Port Cover**  
   ![Port Cover](models/Toolease_Port_Cover.png)  
   Protective cover for the ESP32's USB and other ports, preventing dust and damage.  
-  - **STL File:** [Toolease_Port_Cover.stl](models/Toolease_Port_Cover.stl)  
+  - **STL File:** Download from [Thingiverse](https://www.thingiverse.com/thing:7216344)  
   - **Material:** PLA+  
   - **Print Settings:** 0.2mm layer height, 20% infill, supports not required, bed 60°C, nozzle 210°C  
 
@@ -247,15 +247,12 @@ These 3D models are optimized for standard 3D printers and can be customized usi
 Toolease/
 ├── LICENSE
 ├── README.md
+├── .gitignore
 ├── models/
 │   ├── Toolease_Board_Case.png
-│   ├── Toolease_Board_Case.stl
 │   ├── Toolease_Bracket.png
-│   ├── Toolease_Bracket.stl
 │   ├── Toolease_Case_Cover.png
-│   ├── Toolease_Case_Cover.stl
 │   ├── Toolease_Port_Cover.png
-│   ├── Toolease_Port_Cover.stl
 │   └── Toolease_Rfid_Casing_All_Parts_Joined.png
 ├── source/
 │   └── esp32/
