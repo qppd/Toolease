@@ -126,7 +126,17 @@ The side profile demonstrates the device’s thickness, bracket placement, and v
 The top view is useful for understanding the layout of ports, buttons, and the RFID antenna’s position.
 
 
+
 ### 3D Printed Parts & Covers
+
+**Download all STL files and 3D models on Thingiverse:**
+
+<a href="https://www.thingiverse.com/thing:7220168" target="_blank">
+  <img src="https://img.shields.io/badge/Thingiverse-View%20STL%20Files-blue?logo=thingiverse&style=for-the-badge" alt="Thingiverse STL Files"/>
+</a>
+
+All official ToolEase 3D printable parts are available for free on Thingiverse. Download, remix, or print the latest versions directly from the project page:
+**[https://www.thingiverse.com/thing:7220168](https://www.thingiverse.com/thing:7220168)**
 
 - **Board Case:** ![Board Case](models/Toolease_Board_Case.png)
   - Houses the ESP32 and main electronics, providing robust protection and easy access for maintenance.
