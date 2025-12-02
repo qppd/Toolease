@@ -69,7 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        connected ? 'Connected to ESP32' : 'Not connected to ESP32',
+                        connected ? 'Connected to RFID Scanner' : 'RFID Scanner disconnected',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: connected ? AppColors.success : AppColors.error,
                           fontWeight: FontWeight.w600,

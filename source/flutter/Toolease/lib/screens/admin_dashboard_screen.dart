@@ -7,12 +7,13 @@ import '../providers/borrow_record_provider.dart';
 import '../core/design_system.dart';
 import '../shared/widgets/app_card.dart';
 import '../providers/websocket_connection_provider.dart';
+import '../models/item.dart';
 import 'manage_storages_screen.dart';
 import 'manage_items_screen.dart';
 import 'manage_students_screen.dart';
-import 'manage_records_screen.dart';
-import 'manage_tags_screen.dart';
-import 'reports_screen.dart';
+// import 'manage_records_screen.dart';
+// import 'manage_tags_screen.dart';
+// import 'reports_screen.dart';
 import 'settings_screen.dart';
 import 'admin_user_manual_screen.dart';
 
@@ -154,13 +155,13 @@ class AdminDashboardScreen extends ConsumerWidget {
                     Row(
                       children: [
                         Icon(
-                          connected ? Icons.wifi : Icons.wifi_off,
+                          connected ? Icons.bluetooth_connected : Icons.bluetooth_disabled,
                           color: connected ? AppColors.success : AppColors.error,
                           size: 18,
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          connected ? 'Connected to ESP32' : 'Not connected to ESP32',
+                          connected ? 'Connected to RFID Scanner' : 'RFID Scanner disconnected',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.onPrimary.withValues(alpha: 0.9),
                             fontWeight: FontWeight.w600,
@@ -329,17 +330,11 @@ class AdminDashboardScreen extends ConsumerWidget {
               ),
             ),
             data: (items) {
-              final totalQuantity = items.fold(
-                0,
-                (sum, item) => sum + item.totalQuantity,
-              );
-              final availableQuantity = items.fold(
-                0,
-                (sum, item) => sum + item.availableQuantity,
-              );
-              final borrowedQuantity = totalQuantity - availableQuantity;
-              final utilizationRate = totalQuantity > 0
-                  ? (borrowedQuantity / totalQuantity * 100)
+              final totalItems = items.length;
+              final availableItems = items.where((item) => item.status == ItemStatus.available).length;
+              final borrowedItems = items.where((item) => item.status == ItemStatus.borrowed).length;
+              final utilizationRate = totalItems > 0
+                  ? (borrowedItems / totalItems * 100)
                   : 0;
 
               return Column(
@@ -349,7 +344,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                       Expanded(
                         child: _buildInventoryMetric(
                           'Total Items',
-                          '$totalQuantity',
+                          '$totalItems',
                           Icons.inventory_outlined,
                           AppColors.textPrimary,
                           context,
@@ -358,7 +353,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                       Expanded(
                         child: _buildInventoryMetric(
                           'Available',
-                          '$availableQuantity',
+                          '$availableItems',
                           Icons.check_circle_outline,
                           AppColors.secondary,
                           context,
@@ -367,7 +362,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                       Expanded(
                         child: _buildInventoryMetric(
                           'Borrowed',
-                          '$borrowedQuantity',
+                          '$borrowedItems',
                           Icons.schedule_outlined,
                           AppColors.accent,
                           context,
@@ -562,19 +557,20 @@ class AdminDashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildQuickActionCard(
-                'View Reports',
-                Icons.analytics_outlined,
-                AppColors.accent,
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const ReportsScreen(),
-                  ),
-                ),
-                context,
-              ),
-            ),
+            // Temporarily disabled - needs refactoring for per-unit system
+            // Expanded(
+            //   child: _buildQuickActionCard(
+            //     'View Reports',
+            //     Icons.analytics_outlined,
+            //     AppColors.accent,
+            //     () => Navigator.of(context).push(
+            //       MaterialPageRoute(
+            //         builder: (context) => const ReportsScreen(),
+            //       ),
+            //     ),
+            //     context,
+            //   ),
+            // ),
           ],
         ),
       ],
@@ -680,40 +676,41 @@ class AdminDashboardScreen extends ConsumerWidget {
               ),
               context,
             ),
-            _buildManagementCard(
-              'Manage Records',
-              'View & archive records',
-              Icons.assignment_outlined,
-              AppColors.warning,
-              () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ManageRecordsScreen(),
-                ),
-              ),
-              context,
-            ),
-            _buildManagementCard(
-              'Reports',
-              'Generate system reports',
-              Icons.analytics_outlined,
-              AppColors.primary,
-              () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const ReportsScreen()),
-              ),
-              context,
-            ),
-            _buildManagementCard(
-              'Manage Tags',
-              'Organize item categories',
-              Icons.tag_outlined,
-              AppColors.secondary,
-              () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ManageTagsScreen(),
-                ),
-              ),
-              context,
-            ),
+            // Temporarily disabled - needs refactoring for per-unit system
+            // _buildManagementCard(
+            //   'Manage Records',
+            //   'View & archive records',
+            //   Icons.assignment_outlined,
+            //   AppColors.warning,
+            //   () => Navigator.of(context).push(
+            //     MaterialPageRoute(
+            //       builder: (context) => const ManageRecordsScreen(),
+            //     ),
+            //   ),
+            //   context,
+            // ),
+            // _buildManagementCard(
+            //   'Reports',
+            //   'Generate system reports',
+            //   Icons.analytics_outlined,
+            //   AppColors.primary,
+            //   () => Navigator.of(context).push(
+            //     MaterialPageRoute(builder: (context) => const ReportsScreen()),
+            //   ),
+            //   context,
+            // ),
+            // _buildManagementCard(
+            //   'Manage Tags',
+            //   'Organize item categories',
+            //   Icons.tag_outlined,
+            //   AppColors.secondary,
+            //   () => Navigator.of(context).push(
+            //     MaterialPageRoute(
+            //       builder: (context) => const ManageTagsScreen(),
+            //     ),
+            //   ),
+            //   context,
+            // ),
           ],
         ),
       ],

@@ -49,9 +49,20 @@ class _DatabaseManagementScreenState extends ConsumerState<DatabaseManagementScr
     try {
       final database = ref.read(databaseProvider);
       final databaseService = DatabaseService(database);
-      final counts = await databaseService.getDataCounts();
+      
+      // Manually count data since getDataCounts doesn't exist
+      final students = await databaseService.getAllStudents();
+      final storages = await databaseService.getAllStorages();
+      final items = await databaseService.getAllItems();
+      final borrowRecords = await databaseService.getAllBorrowRecords();
+      
       setState(() {
-        _dataCounts = counts;
+        _dataCounts = {
+          'students': students.length,
+          'storages': storages.length,
+          'items': items.length,
+          'borrowRecords': borrowRecords.length,
+        };
         _isLoading = false;
       });
     } catch (e) {
@@ -428,12 +439,14 @@ class _DatabaseManagementScreenState extends ConsumerState<DatabaseManagementScr
             }
           });
         },
-        title: Text(item.name),
+        title: Text(item.toolName),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (item.description != null) Text(item.description!),
-            Text('Available: ${item.availableQuantity} / ${item.totalQuantity}'),
+            Text('${item.model} | ${item.productNo}'),
+            Text('Serial: ${item.serialNo}'),
+            if (item.remarks != null) Text('Remarks: ${item.remarks}'),
+            Text('Status: ${item.status.displayName}'),
           ],
         ),
         secondary: Icon(Icons.inventory_2, color: AppColors.accent),

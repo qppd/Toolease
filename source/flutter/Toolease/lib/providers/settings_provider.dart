@@ -1,84 +1,49 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/setting.dart';
-import 'database_provider.dart';
 
-// Provider for individual setting keys
-final settingProvider = FutureProvider.family<String, String>((ref, key) async {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return await databaseService.getSetting(key);
+// Stub providers for settings functionality
+// TODO: Implement proper settings management for per-unit system
+
+// Provider for kiosk mode - defaults to disabled
+final kioskModeEnabledProvider = FutureProvider<bool>((ref) async {
+  return false; // Kiosk mode disabled by default
 });
 
-// Provider for checking if screen is enabled
-final screenEnabledProvider = FutureProvider.family<bool, String>((ref, screenKey) async {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return await databaseService.isScreenEnabled(screenKey);
-});
-
-// Provider for all settings
-final allSettingsProvider = FutureProvider<Map<String, String>>((ref) async {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return await databaseService.getAllSettings();
-});
-
-// Settings notifier for updating settings
-class SettingsNotifier extends StateNotifier<AsyncValue<Map<String, String>>> {
-  final Ref _ref;
-
-  SettingsNotifier(this._ref) : super(const AsyncValue.loading()) {
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final databaseService = _ref.read(databaseServiceProvider);
-      final settings = await databaseService.getAllSettings();
-      state = AsyncValue.data(settings);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-    }
-  }
-
-  Future<void> updateSetting(String key, String value) async {
-    try {
-      final databaseService = _ref.read(databaseServiceProvider);
-      await databaseService.updateSetting(key, value);
-      
-      // Refresh the settings
-      await _loadSettings();
-      
-      // Invalidate related providers to trigger refresh
-      _ref.invalidate(settingProvider(key));
-      _ref.invalidate(screenEnabledProvider(key));
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-    }
-  }
-
-  Future<void> toggleScreenAccess(String screenKey) async {
-    final currentSettings = state.asData?.value ?? {};
-    final currentValue = currentSettings[screenKey] ?? 'true';
-    final newValue = currentValue.toLowerCase() == 'true' ? 'false' : 'true';
-    await updateSetting(screenKey, newValue);
-  }
-}
-
-final settingsNotifierProvider = StateNotifierProvider<SettingsNotifier, AsyncValue<Map<String, String>>>((ref) {
-  return SettingsNotifier(ref);
-});
-
-// Convenience providers for specific screens
+// Provider for checking if screen is enabled - defaults to true
 final registerScreenEnabledProvider = FutureProvider<bool>((ref) async {
-  return ref.watch(screenEnabledProvider(SettingKeys.enableRegister).future);
+  return true;
 });
 
 final borrowScreenEnabledProvider = FutureProvider<bool>((ref) async {
-  return ref.watch(screenEnabledProvider(SettingKeys.enableBorrow).future);
+  return true;
 });
 
 final returnScreenEnabledProvider = FutureProvider<bool>((ref) async {
-  return ref.watch(screenEnabledProvider(SettingKeys.enableReturn).future);
+  return true;
 });
 
-final kioskModeEnabledProvider = FutureProvider<bool>((ref) async {
-  return ref.watch(screenEnabledProvider(SettingKeys.enableKioskMode).future);
-});
+// Settings notifier stub
+class SettingsNotifier extends StateNotifier<AsyncValue<Map<String, String>>> {
+  final Ref _ref;
+
+  SettingsNotifier(this._ref) : super(const AsyncValue.data({}));
+
+  Future<void> updateSetting(String key, String value) async {
+    // Stub - does nothing for now
+  }
+
+  Future<void> updateScreenEnabled(String screenKey, bool enabled) async {
+    // Stub - does nothing for now
+  }
+
+  Future<void> toggleScreenAccess(String screenKey) async {
+    // Stub - does nothing for now
+  }
+
+  Future<void> refresh() async {
+    // Stub - does nothing for now
+  }
+}
+
+final settingsNotifierProvider = StateNotifierProvider<SettingsNotifier, AsyncValue<Map<String, String>>>(
+  (ref) => SettingsNotifier(ref),
+);

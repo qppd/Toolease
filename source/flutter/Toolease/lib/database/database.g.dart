@@ -718,25 +718,78 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  static const VerificationMeta _toolNameMeta = const VerificationMeta(
+    'toolName',
+  );
   @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
+  late final GeneratedColumn<String> toolName = GeneratedColumn<String>(
+    'tool_name',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _descriptionMeta = const VerificationMeta(
-    'description',
+  static const VerificationMeta _modelMeta = const VerificationMeta('model');
+  @override
+  late final GeneratedColumn<String> model = GeneratedColumn<String>(
+    'model',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _productNoMeta = const VerificationMeta(
+    'productNo',
   );
   @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-    'description',
+  late final GeneratedColumn<String> productNo = GeneratedColumn<String>(
+    'product_no',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _serialNoMeta = const VerificationMeta(
+    'serialNo',
+  );
+  @override
+  late final GeneratedColumn<String> serialNo = GeneratedColumn<String>(
+    'serial_no',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _remarksMeta = const VerificationMeta(
+    'remarks',
+  );
+  @override
+  late final GeneratedColumn<String> remarks = GeneratedColumn<String>(
+    'remarks',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _yearMeta = const VerificationMeta('year');
+  @override
+  late final GeneratedColumn<String> year = GeneratedColumn<String>(
+    'year',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('available'),
   );
   static const VerificationMeta _storageIdMeta = const VerificationMeta(
     'storageId',
@@ -745,36 +798,12 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
   late final GeneratedColumn<int> storageId = GeneratedColumn<int>(
     'storage_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES storages (id)',
     ),
-  );
-  static const VerificationMeta _totalQuantityMeta = const VerificationMeta(
-    'totalQuantity',
-  );
-  @override
-  late final GeneratedColumn<int> totalQuantity = GeneratedColumn<int>(
-    'total_quantity',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  static const VerificationMeta _availableQuantityMeta = const VerificationMeta(
-    'availableQuantity',
-  );
-  @override
-  late final GeneratedColumn<int> availableQuantity = GeneratedColumn<int>(
-    'available_quantity',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -788,15 +817,31 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    name,
-    description,
+    toolName,
+    model,
+    productNo,
+    serialNo,
+    remarks,
+    year,
+    status,
     storageId,
-    totalQuantity,
-    availableQuantity,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -813,21 +858,56 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('name')) {
+    if (data.containsKey('tool_name')) {
       context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+        _toolNameMeta,
+        toolName.isAcceptableOrUnknown(data['tool_name']!, _toolNameMeta),
       );
     } else if (isInserting) {
-      context.missing(_nameMeta);
+      context.missing(_toolNameMeta);
     }
-    if (data.containsKey('description')) {
+    if (data.containsKey('model')) {
       context.handle(
-        _descriptionMeta,
-        description.isAcceptableOrUnknown(
-          data['description']!,
-          _descriptionMeta,
-        ),
+        _modelMeta,
+        model.isAcceptableOrUnknown(data['model']!, _modelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_modelMeta);
+    }
+    if (data.containsKey('product_no')) {
+      context.handle(
+        _productNoMeta,
+        productNo.isAcceptableOrUnknown(data['product_no']!, _productNoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productNoMeta);
+    }
+    if (data.containsKey('serial_no')) {
+      context.handle(
+        _serialNoMeta,
+        serialNo.isAcceptableOrUnknown(data['serial_no']!, _serialNoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serialNoMeta);
+    }
+    if (data.containsKey('remarks')) {
+      context.handle(
+        _remarksMeta,
+        remarks.isAcceptableOrUnknown(data['remarks']!, _remarksMeta),
+      );
+    }
+    if (data.containsKey('year')) {
+      context.handle(
+        _yearMeta,
+        year.isAcceptableOrUnknown(data['year']!, _yearMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_yearMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
     if (data.containsKey('storage_id')) {
@@ -835,31 +915,17 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         _storageIdMeta,
         storageId.isAcceptableOrUnknown(data['storage_id']!, _storageIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_storageIdMeta);
-    }
-    if (data.containsKey('total_quantity')) {
-      context.handle(
-        _totalQuantityMeta,
-        totalQuantity.isAcceptableOrUnknown(
-          data['total_quantity']!,
-          _totalQuantityMeta,
-        ),
-      );
-    }
-    if (data.containsKey('available_quantity')) {
-      context.handle(
-        _availableQuantityMeta,
-        availableQuantity.isAcceptableOrUnknown(
-          data['available_quantity']!,
-          _availableQuantityMeta,
-        ),
-      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
     return context;
@@ -875,29 +941,45 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
-      name: attachedDatabase.typeMapping.read(
+      toolName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}name'],
+        data['${effectivePrefix}tool_name'],
       )!,
-      description: attachedDatabase.typeMapping.read(
+      model: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}description'],
+        data['${effectivePrefix}model'],
+      )!,
+      productNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_no'],
+      )!,
+      serialNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}serial_no'],
+      )!,
+      remarks: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remarks'],
       ),
+      year: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}year'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
       storageId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}storage_id'],
-      )!,
-      totalQuantity: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}total_quantity'],
-      )!,
-      availableQuantity: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}available_quantity'],
-      )!,
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
       )!,
     );
   }
@@ -910,47 +992,67 @@ class $ItemsTable extends Items with TableInfo<$ItemsTable, Item> {
 
 class Item extends DataClass implements Insertable<Item> {
   final int id;
-  final String name;
-  final String? description;
-  final int storageId;
-  final int totalQuantity;
-  final int availableQuantity;
+  final String toolName;
+  final String model;
+  final String productNo;
+  final String serialNo;
+  final String? remarks;
+  final String year;
+  final String status;
+  final int? storageId;
   final DateTime createdAt;
+  final DateTime updatedAt;
   const Item({
     required this.id,
-    required this.name,
-    this.description,
-    required this.storageId,
-    required this.totalQuantity,
-    required this.availableQuantity,
+    required this.toolName,
+    required this.model,
+    required this.productNo,
+    required this.serialNo,
+    this.remarks,
+    required this.year,
+    required this.status,
+    this.storageId,
     required this.createdAt,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['name'] = Variable<String>(name);
-    if (!nullToAbsent || description != null) {
-      map['description'] = Variable<String>(description);
+    map['tool_name'] = Variable<String>(toolName);
+    map['model'] = Variable<String>(model);
+    map['product_no'] = Variable<String>(productNo);
+    map['serial_no'] = Variable<String>(serialNo);
+    if (!nullToAbsent || remarks != null) {
+      map['remarks'] = Variable<String>(remarks);
     }
-    map['storage_id'] = Variable<int>(storageId);
-    map['total_quantity'] = Variable<int>(totalQuantity);
-    map['available_quantity'] = Variable<int>(availableQuantity);
+    map['year'] = Variable<String>(year);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || storageId != null) {
+      map['storage_id'] = Variable<int>(storageId);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
   ItemsCompanion toCompanion(bool nullToAbsent) {
     return ItemsCompanion(
       id: Value(id),
-      name: Value(name),
-      description: description == null && nullToAbsent
+      toolName: Value(toolName),
+      model: Value(model),
+      productNo: Value(productNo),
+      serialNo: Value(serialNo),
+      remarks: remarks == null && nullToAbsent
           ? const Value.absent()
-          : Value(description),
-      storageId: Value(storageId),
-      totalQuantity: Value(totalQuantity),
-      availableQuantity: Value(availableQuantity),
+          : Value(remarks),
+      year: Value(year),
+      status: Value(status),
+      storageId: storageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storageId),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -961,12 +1063,16 @@ class Item extends DataClass implements Insertable<Item> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Item(
       id: serializer.fromJson<int>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      description: serializer.fromJson<String?>(json['description']),
-      storageId: serializer.fromJson<int>(json['storageId']),
-      totalQuantity: serializer.fromJson<int>(json['totalQuantity']),
-      availableQuantity: serializer.fromJson<int>(json['availableQuantity']),
+      toolName: serializer.fromJson<String>(json['toolName']),
+      model: serializer.fromJson<String>(json['model']),
+      productNo: serializer.fromJson<String>(json['productNo']),
+      serialNo: serializer.fromJson<String>(json['serialNo']),
+      remarks: serializer.fromJson<String?>(json['remarks']),
+      year: serializer.fromJson<String>(json['year']),
+      status: serializer.fromJson<String>(json['status']),
+      storageId: serializer.fromJson<int?>(json['storageId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -974,47 +1080,57 @@ class Item extends DataClass implements Insertable<Item> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'name': serializer.toJson<String>(name),
-      'description': serializer.toJson<String?>(description),
-      'storageId': serializer.toJson<int>(storageId),
-      'totalQuantity': serializer.toJson<int>(totalQuantity),
-      'availableQuantity': serializer.toJson<int>(availableQuantity),
+      'toolName': serializer.toJson<String>(toolName),
+      'model': serializer.toJson<String>(model),
+      'productNo': serializer.toJson<String>(productNo),
+      'serialNo': serializer.toJson<String>(serialNo),
+      'remarks': serializer.toJson<String?>(remarks),
+      'year': serializer.toJson<String>(year),
+      'status': serializer.toJson<String>(status),
+      'storageId': serializer.toJson<int?>(storageId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
   Item copyWith({
     int? id,
-    String? name,
-    Value<String?> description = const Value.absent(),
-    int? storageId,
-    int? totalQuantity,
-    int? availableQuantity,
+    String? toolName,
+    String? model,
+    String? productNo,
+    String? serialNo,
+    Value<String?> remarks = const Value.absent(),
+    String? year,
+    String? status,
+    Value<int?> storageId = const Value.absent(),
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) => Item(
     id: id ?? this.id,
-    name: name ?? this.name,
-    description: description.present ? description.value : this.description,
-    storageId: storageId ?? this.storageId,
-    totalQuantity: totalQuantity ?? this.totalQuantity,
-    availableQuantity: availableQuantity ?? this.availableQuantity,
+    toolName: toolName ?? this.toolName,
+    model: model ?? this.model,
+    productNo: productNo ?? this.productNo,
+    serialNo: serialNo ?? this.serialNo,
+    remarks: remarks.present ? remarks.value : this.remarks,
+    year: year ?? this.year,
+    status: status ?? this.status,
+    storageId: storageId.present ? storageId.value : this.storageId,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   Item copyWithCompanion(ItemsCompanion data) {
     return Item(
       id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      description: data.description.present
-          ? data.description.value
-          : this.description,
+      toolName: data.toolName.present ? data.toolName.value : this.toolName,
+      model: data.model.present ? data.model.value : this.model,
+      productNo: data.productNo.present ? data.productNo.value : this.productNo,
+      serialNo: data.serialNo.present ? data.serialNo.value : this.serialNo,
+      remarks: data.remarks.present ? data.remarks.value : this.remarks,
+      year: data.year.present ? data.year.value : this.year,
+      status: data.status.present ? data.status.value : this.status,
       storageId: data.storageId.present ? data.storageId.value : this.storageId,
-      totalQuantity: data.totalQuantity.present
-          ? data.totalQuantity.value
-          : this.totalQuantity,
-      availableQuantity: data.availableQuantity.present
-          ? data.availableQuantity.value
-          : this.availableQuantity,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -1022,12 +1138,16 @@ class Item extends DataClass implements Insertable<Item> {
   String toString() {
     return (StringBuffer('Item(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('description: $description, ')
+          ..write('toolName: $toolName, ')
+          ..write('model: $model, ')
+          ..write('productNo: $productNo, ')
+          ..write('serialNo: $serialNo, ')
+          ..write('remarks: $remarks, ')
+          ..write('year: $year, ')
+          ..write('status: $status, ')
           ..write('storageId: $storageId, ')
-          ..write('totalQuantity: $totalQuantity, ')
-          ..write('availableQuantity: $availableQuantity, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -1035,90 +1155,129 @@ class Item extends DataClass implements Insertable<Item> {
   @override
   int get hashCode => Object.hash(
     id,
-    name,
-    description,
+    toolName,
+    model,
+    productNo,
+    serialNo,
+    remarks,
+    year,
+    status,
     storageId,
-    totalQuantity,
-    availableQuantity,
     createdAt,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Item &&
           other.id == this.id &&
-          other.name == this.name &&
-          other.description == this.description &&
+          other.toolName == this.toolName &&
+          other.model == this.model &&
+          other.productNo == this.productNo &&
+          other.serialNo == this.serialNo &&
+          other.remarks == this.remarks &&
+          other.year == this.year &&
+          other.status == this.status &&
           other.storageId == this.storageId &&
-          other.totalQuantity == this.totalQuantity &&
-          other.availableQuantity == this.availableQuantity &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class ItemsCompanion extends UpdateCompanion<Item> {
   final Value<int> id;
-  final Value<String> name;
-  final Value<String?> description;
-  final Value<int> storageId;
-  final Value<int> totalQuantity;
-  final Value<int> availableQuantity;
+  final Value<String> toolName;
+  final Value<String> model;
+  final Value<String> productNo;
+  final Value<String> serialNo;
+  final Value<String?> remarks;
+  final Value<String> year;
+  final Value<String> status;
+  final Value<int?> storageId;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
   const ItemsCompanion({
     this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.description = const Value.absent(),
+    this.toolName = const Value.absent(),
+    this.model = const Value.absent(),
+    this.productNo = const Value.absent(),
+    this.serialNo = const Value.absent(),
+    this.remarks = const Value.absent(),
+    this.year = const Value.absent(),
+    this.status = const Value.absent(),
     this.storageId = const Value.absent(),
-    this.totalQuantity = const Value.absent(),
-    this.availableQuantity = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   ItemsCompanion.insert({
     this.id = const Value.absent(),
-    required String name,
-    this.description = const Value.absent(),
-    required int storageId,
-    this.totalQuantity = const Value.absent(),
-    this.availableQuantity = const Value.absent(),
+    required String toolName,
+    required String model,
+    required String productNo,
+    required String serialNo,
+    this.remarks = const Value.absent(),
+    required String year,
+    this.status = const Value.absent(),
+    this.storageId = const Value.absent(),
     this.createdAt = const Value.absent(),
-  }) : name = Value(name),
-       storageId = Value(storageId);
+    this.updatedAt = const Value.absent(),
+  }) : toolName = Value(toolName),
+       model = Value(model),
+       productNo = Value(productNo),
+       serialNo = Value(serialNo),
+       year = Value(year);
   static Insertable<Item> custom({
     Expression<int>? id,
-    Expression<String>? name,
-    Expression<String>? description,
+    Expression<String>? toolName,
+    Expression<String>? model,
+    Expression<String>? productNo,
+    Expression<String>? serialNo,
+    Expression<String>? remarks,
+    Expression<String>? year,
+    Expression<String>? status,
     Expression<int>? storageId,
-    Expression<int>? totalQuantity,
-    Expression<int>? availableQuantity,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (description != null) 'description': description,
+      if (toolName != null) 'tool_name': toolName,
+      if (model != null) 'model': model,
+      if (productNo != null) 'product_no': productNo,
+      if (serialNo != null) 'serial_no': serialNo,
+      if (remarks != null) 'remarks': remarks,
+      if (year != null) 'year': year,
+      if (status != null) 'status': status,
       if (storageId != null) 'storage_id': storageId,
-      if (totalQuantity != null) 'total_quantity': totalQuantity,
-      if (availableQuantity != null) 'available_quantity': availableQuantity,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
   ItemsCompanion copyWith({
     Value<int>? id,
-    Value<String>? name,
-    Value<String?>? description,
-    Value<int>? storageId,
-    Value<int>? totalQuantity,
-    Value<int>? availableQuantity,
+    Value<String>? toolName,
+    Value<String>? model,
+    Value<String>? productNo,
+    Value<String>? serialNo,
+    Value<String?>? remarks,
+    Value<String>? year,
+    Value<String>? status,
+    Value<int?>? storageId,
     Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
   }) {
     return ItemsCompanion(
       id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
+      toolName: toolName ?? this.toolName,
+      model: model ?? this.model,
+      productNo: productNo ?? this.productNo,
+      serialNo: serialNo ?? this.serialNo,
+      remarks: remarks ?? this.remarks,
+      year: year ?? this.year,
+      status: status ?? this.status,
       storageId: storageId ?? this.storageId,
-      totalQuantity: totalQuantity ?? this.totalQuantity,
-      availableQuantity: availableQuantity ?? this.availableQuantity,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -1128,23 +1287,35 @@ class ItemsCompanion extends UpdateCompanion<Item> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
+    if (toolName.present) {
+      map['tool_name'] = Variable<String>(toolName.value);
     }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
+    if (model.present) {
+      map['model'] = Variable<String>(model.value);
+    }
+    if (productNo.present) {
+      map['product_no'] = Variable<String>(productNo.value);
+    }
+    if (serialNo.present) {
+      map['serial_no'] = Variable<String>(serialNo.value);
+    }
+    if (remarks.present) {
+      map['remarks'] = Variable<String>(remarks.value);
+    }
+    if (year.present) {
+      map['year'] = Variable<String>(year.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
     }
     if (storageId.present) {
       map['storage_id'] = Variable<int>(storageId.value);
     }
-    if (totalQuantity.present) {
-      map['total_quantity'] = Variable<int>(totalQuantity.value);
-    }
-    if (availableQuantity.present) {
-      map['available_quantity'] = Variable<int>(availableQuantity.value);
-    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
     return map;
   }
@@ -1153,361 +1324,16 @@ class ItemsCompanion extends UpdateCompanion<Item> {
   String toString() {
     return (StringBuffer('ItemsCompanion(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('description: $description, ')
+          ..write('toolName: $toolName, ')
+          ..write('model: $model, ')
+          ..write('productNo: $productNo, ')
+          ..write('serialNo: $serialNo, ')
+          ..write('remarks: $remarks, ')
+          ..write('year: $year, ')
+          ..write('status: $status, ')
           ..write('storageId: $storageId, ')
-          ..write('totalQuantity: $totalQuantity, ')
-          ..write('availableQuantity: $availableQuantity, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $ItemUnitsTable extends ItemUnits
-    with TableInfo<$ItemUnitsTable, ItemUnit> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $ItemUnitsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
-  @override
-  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
-    'item_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES items (id)',
-    ),
-  );
-  static const VerificationMeta _serialNoMeta = const VerificationMeta(
-    'serialNo',
-  );
-  @override
-  late final GeneratedColumn<String> serialNo = GeneratedColumn<String>(
-    'serial_no',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _statusMeta = const VerificationMeta('status');
-  @override
-  late final GeneratedColumn<String> status = GeneratedColumn<String>(
-    'status',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    itemId,
-    serialNo,
-    status,
-    createdAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'item_units';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<ItemUnit> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('item_id')) {
-      context.handle(
-        _itemIdMeta,
-        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_itemIdMeta);
-    }
-    if (data.containsKey('serial_no')) {
-      context.handle(
-        _serialNoMeta,
-        serialNo.isAcceptableOrUnknown(data['serial_no']!, _serialNoMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_serialNoMeta);
-    }
-    if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_statusMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  ItemUnit map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ItemUnit(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      itemId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}item_id'],
-      )!,
-      serialNo: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}serial_no'],
-      )!,
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}status'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-    );
-  }
-
-  @override
-  $ItemUnitsTable createAlias(String alias) {
-    return $ItemUnitsTable(attachedDatabase, alias);
-  }
-}
-
-class ItemUnit extends DataClass implements Insertable<ItemUnit> {
-  final int id;
-  final int itemId;
-  final String serialNo;
-  final String status;
-  final DateTime createdAt;
-  const ItemUnit({
-    required this.id,
-    required this.itemId,
-    required this.serialNo,
-    required this.status,
-    required this.createdAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['item_id'] = Variable<int>(itemId);
-    map['serial_no'] = Variable<String>(serialNo);
-    map['status'] = Variable<String>(status);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  ItemUnitsCompanion toCompanion(bool nullToAbsent) {
-    return ItemUnitsCompanion(
-      id: Value(id),
-      itemId: Value(itemId),
-      serialNo: Value(serialNo),
-      status: Value(status),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory ItemUnit.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ItemUnit(
-      id: serializer.fromJson<int>(json['id']),
-      itemId: serializer.fromJson<int>(json['itemId']),
-      serialNo: serializer.fromJson<String>(json['serialNo']),
-      status: serializer.fromJson<String>(json['status']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'itemId': serializer.toJson<int>(itemId),
-      'serialNo': serializer.toJson<String>(serialNo),
-      'status': serializer.toJson<String>(status),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  ItemUnit copyWith({
-    int? id,
-    int? itemId,
-    String? serialNo,
-    String? status,
-    DateTime? createdAt,
-  }) => ItemUnit(
-    id: id ?? this.id,
-    itemId: itemId ?? this.itemId,
-    serialNo: serialNo ?? this.serialNo,
-    status: status ?? this.status,
-    createdAt: createdAt ?? this.createdAt,
-  );
-  ItemUnit copyWithCompanion(ItemUnitsCompanion data) {
-    return ItemUnit(
-      id: data.id.present ? data.id.value : this.id,
-      itemId: data.itemId.present ? data.itemId.value : this.itemId,
-      serialNo: data.serialNo.present ? data.serialNo.value : this.serialNo,
-      status: data.status.present ? data.status.value : this.status,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ItemUnit(')
-          ..write('id: $id, ')
-          ..write('itemId: $itemId, ')
-          ..write('serialNo: $serialNo, ')
-          ..write('status: $status, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, itemId, serialNo, status, createdAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ItemUnit &&
-          other.id == this.id &&
-          other.itemId == this.itemId &&
-          other.serialNo == this.serialNo &&
-          other.status == this.status &&
-          other.createdAt == this.createdAt);
-}
-
-class ItemUnitsCompanion extends UpdateCompanion<ItemUnit> {
-  final Value<int> id;
-  final Value<int> itemId;
-  final Value<String> serialNo;
-  final Value<String> status;
-  final Value<DateTime> createdAt;
-  const ItemUnitsCompanion({
-    this.id = const Value.absent(),
-    this.itemId = const Value.absent(),
-    this.serialNo = const Value.absent(),
-    this.status = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  ItemUnitsCompanion.insert({
-    this.id = const Value.absent(),
-    required int itemId,
-    required String serialNo,
-    required String status,
-    this.createdAt = const Value.absent(),
-  }) : itemId = Value(itemId),
-       serialNo = Value(serialNo),
-       status = Value(status);
-  static Insertable<ItemUnit> custom({
-    Expression<int>? id,
-    Expression<int>? itemId,
-    Expression<String>? serialNo,
-    Expression<String>? status,
-    Expression<DateTime>? createdAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (itemId != null) 'item_id': itemId,
-      if (serialNo != null) 'serial_no': serialNo,
-      if (status != null) 'status': status,
-      if (createdAt != null) 'created_at': createdAt,
-    });
-  }
-
-  ItemUnitsCompanion copyWith({
-    Value<int>? id,
-    Value<int>? itemId,
-    Value<String>? serialNo,
-    Value<String>? status,
-    Value<DateTime>? createdAt,
-  }) {
-    return ItemUnitsCompanion(
-      id: id ?? this.id,
-      itemId: itemId ?? this.itemId,
-      serialNo: serialNo ?? this.serialNo,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (itemId.present) {
-      map['item_id'] = Variable<int>(itemId.value);
-    }
-    if (serialNo.present) {
-      map['serial_no'] = Variable<String>(serialNo.value);
-    }
-    if (status.present) {
-      map['status'] = Variable<String>(status.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ItemUnitsCompanion(')
-          ..write('id: $id, ')
-          ..write('itemId: $itemId, ')
-          ..write('serialNo: $serialNo, ')
-          ..write('status: $status, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -1963,35 +1789,48 @@ class $BorrowItemsTable extends BorrowItems
       'REFERENCES items (id)',
     ),
   );
-  static const VerificationMeta _quantityMeta = const VerificationMeta(
-    'quantity',
+  static const VerificationMeta _conditionMeta = const VerificationMeta(
+    'condition',
   );
   @override
-  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
-    'quantity',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _returnConditionMeta = const VerificationMeta(
-    'returnCondition',
-  );
-  @override
-  late final GeneratedColumn<String> returnCondition = GeneratedColumn<String>(
-    'return_condition',
+  late final GeneratedColumn<String> condition = GeneratedColumn<String>(
+    'condition',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _returnedAtMeta = const VerificationMeta(
+    'returnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> returnedAt = GeneratedColumn<DateTime>(
+    'returned_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
   );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     borrowRecordId,
     itemId,
-    quantity,
-    returnCondition,
+    condition,
+    returnedAt,
+    createdAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2027,21 +1866,22 @@ class $BorrowItemsTable extends BorrowItems
     } else if (isInserting) {
       context.missing(_itemIdMeta);
     }
-    if (data.containsKey('quantity')) {
+    if (data.containsKey('condition')) {
       context.handle(
-        _quantityMeta,
-        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+        _conditionMeta,
+        condition.isAcceptableOrUnknown(data['condition']!, _conditionMeta),
       );
-    } else if (isInserting) {
-      context.missing(_quantityMeta);
     }
-    if (data.containsKey('return_condition')) {
+    if (data.containsKey('returned_at')) {
       context.handle(
-        _returnConditionMeta,
-        returnCondition.isAcceptableOrUnknown(
-          data['return_condition']!,
-          _returnConditionMeta,
-        ),
+        _returnedAtMeta,
+        returnedAt.isAcceptableOrUnknown(data['returned_at']!, _returnedAtMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
     return context;
@@ -2065,14 +1905,18 @@ class $BorrowItemsTable extends BorrowItems
         DriftSqlType.int,
         data['${effectivePrefix}item_id'],
       )!,
-      quantity: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}quantity'],
-      )!,
-      returnCondition: attachedDatabase.typeMapping.read(
+      condition: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}return_condition'],
+        data['${effectivePrefix}condition'],
       ),
+      returnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}returned_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -2086,14 +1930,16 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
   final int id;
   final int borrowRecordId;
   final int itemId;
-  final int quantity;
-  final String? returnCondition;
+  final String? condition;
+  final DateTime? returnedAt;
+  final DateTime createdAt;
   const BorrowItem({
     required this.id,
     required this.borrowRecordId,
     required this.itemId,
-    required this.quantity,
-    this.returnCondition,
+    this.condition,
+    this.returnedAt,
+    required this.createdAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2101,10 +1947,13 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
     map['id'] = Variable<int>(id);
     map['borrow_record_id'] = Variable<int>(borrowRecordId);
     map['item_id'] = Variable<int>(itemId);
-    map['quantity'] = Variable<int>(quantity);
-    if (!nullToAbsent || returnCondition != null) {
-      map['return_condition'] = Variable<String>(returnCondition);
+    if (!nullToAbsent || condition != null) {
+      map['condition'] = Variable<String>(condition);
     }
+    if (!nullToAbsent || returnedAt != null) {
+      map['returned_at'] = Variable<DateTime>(returnedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
 
@@ -2113,10 +1962,13 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
       id: Value(id),
       borrowRecordId: Value(borrowRecordId),
       itemId: Value(itemId),
-      quantity: Value(quantity),
-      returnCondition: returnCondition == null && nullToAbsent
+      condition: condition == null && nullToAbsent
           ? const Value.absent()
-          : Value(returnCondition),
+          : Value(condition),
+      returnedAt: returnedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(returnedAt),
+      createdAt: Value(createdAt),
     );
   }
 
@@ -2129,8 +1981,9 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
       id: serializer.fromJson<int>(json['id']),
       borrowRecordId: serializer.fromJson<int>(json['borrowRecordId']),
       itemId: serializer.fromJson<int>(json['itemId']),
-      quantity: serializer.fromJson<int>(json['quantity']),
-      returnCondition: serializer.fromJson<String?>(json['returnCondition']),
+      condition: serializer.fromJson<String?>(json['condition']),
+      returnedAt: serializer.fromJson<DateTime?>(json['returnedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
   @override
@@ -2140,8 +1993,9 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
       'id': serializer.toJson<int>(id),
       'borrowRecordId': serializer.toJson<int>(borrowRecordId),
       'itemId': serializer.toJson<int>(itemId),
-      'quantity': serializer.toJson<int>(quantity),
-      'returnCondition': serializer.toJson<String?>(returnCondition),
+      'condition': serializer.toJson<String?>(condition),
+      'returnedAt': serializer.toJson<DateTime?>(returnedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
@@ -2149,16 +2003,16 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
     int? id,
     int? borrowRecordId,
     int? itemId,
-    int? quantity,
-    Value<String?> returnCondition = const Value.absent(),
+    Value<String?> condition = const Value.absent(),
+    Value<DateTime?> returnedAt = const Value.absent(),
+    DateTime? createdAt,
   }) => BorrowItem(
     id: id ?? this.id,
     borrowRecordId: borrowRecordId ?? this.borrowRecordId,
     itemId: itemId ?? this.itemId,
-    quantity: quantity ?? this.quantity,
-    returnCondition: returnCondition.present
-        ? returnCondition.value
-        : this.returnCondition,
+    condition: condition.present ? condition.value : this.condition,
+    returnedAt: returnedAt.present ? returnedAt.value : this.returnedAt,
+    createdAt: createdAt ?? this.createdAt,
   );
   BorrowItem copyWithCompanion(BorrowItemsCompanion data) {
     return BorrowItem(
@@ -2167,10 +2021,11 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
           ? data.borrowRecordId.value
           : this.borrowRecordId,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
-      quantity: data.quantity.present ? data.quantity.value : this.quantity,
-      returnCondition: data.returnCondition.present
-          ? data.returnCondition.value
-          : this.returnCondition,
+      condition: data.condition.present ? data.condition.value : this.condition,
+      returnedAt: data.returnedAt.present
+          ? data.returnedAt.value
+          : this.returnedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
 
@@ -2180,15 +2035,16 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
           ..write('id: $id, ')
           ..write('borrowRecordId: $borrowRecordId, ')
           ..write('itemId: $itemId, ')
-          ..write('quantity: $quantity, ')
-          ..write('returnCondition: $returnCondition')
+          ..write('condition: $condition, ')
+          ..write('returnedAt: $returnedAt, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, borrowRecordId, itemId, quantity, returnCondition);
+      Object.hash(id, borrowRecordId, itemId, condition, returnedAt, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2196,45 +2052,50 @@ class BorrowItem extends DataClass implements Insertable<BorrowItem> {
           other.id == this.id &&
           other.borrowRecordId == this.borrowRecordId &&
           other.itemId == this.itemId &&
-          other.quantity == this.quantity &&
-          other.returnCondition == this.returnCondition);
+          other.condition == this.condition &&
+          other.returnedAt == this.returnedAt &&
+          other.createdAt == this.createdAt);
 }
 
 class BorrowItemsCompanion extends UpdateCompanion<BorrowItem> {
   final Value<int> id;
   final Value<int> borrowRecordId;
   final Value<int> itemId;
-  final Value<int> quantity;
-  final Value<String?> returnCondition;
+  final Value<String?> condition;
+  final Value<DateTime?> returnedAt;
+  final Value<DateTime> createdAt;
   const BorrowItemsCompanion({
     this.id = const Value.absent(),
     this.borrowRecordId = const Value.absent(),
     this.itemId = const Value.absent(),
-    this.quantity = const Value.absent(),
-    this.returnCondition = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.returnedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
   });
   BorrowItemsCompanion.insert({
     this.id = const Value.absent(),
     required int borrowRecordId,
     required int itemId,
-    required int quantity,
-    this.returnCondition = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.returnedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
   }) : borrowRecordId = Value(borrowRecordId),
-       itemId = Value(itemId),
-       quantity = Value(quantity);
+       itemId = Value(itemId);
   static Insertable<BorrowItem> custom({
     Expression<int>? id,
     Expression<int>? borrowRecordId,
     Expression<int>? itemId,
-    Expression<int>? quantity,
-    Expression<String>? returnCondition,
+    Expression<String>? condition,
+    Expression<DateTime>? returnedAt,
+    Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (borrowRecordId != null) 'borrow_record_id': borrowRecordId,
       if (itemId != null) 'item_id': itemId,
-      if (quantity != null) 'quantity': quantity,
-      if (returnCondition != null) 'return_condition': returnCondition,
+      if (condition != null) 'condition': condition,
+      if (returnedAt != null) 'returned_at': returnedAt,
+      if (createdAt != null) 'created_at': createdAt,
     });
   }
 
@@ -2242,15 +2103,17 @@ class BorrowItemsCompanion extends UpdateCompanion<BorrowItem> {
     Value<int>? id,
     Value<int>? borrowRecordId,
     Value<int>? itemId,
-    Value<int>? quantity,
-    Value<String?>? returnCondition,
+    Value<String?>? condition,
+    Value<DateTime?>? returnedAt,
+    Value<DateTime>? createdAt,
   }) {
     return BorrowItemsCompanion(
       id: id ?? this.id,
       borrowRecordId: borrowRecordId ?? this.borrowRecordId,
       itemId: itemId ?? this.itemId,
-      quantity: quantity ?? this.quantity,
-      returnCondition: returnCondition ?? this.returnCondition,
+      condition: condition ?? this.condition,
+      returnedAt: returnedAt ?? this.returnedAt,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -2266,11 +2129,14 @@ class BorrowItemsCompanion extends UpdateCompanion<BorrowItem> {
     if (itemId.present) {
       map['item_id'] = Variable<int>(itemId.value);
     }
-    if (quantity.present) {
-      map['quantity'] = Variable<int>(quantity.value);
+    if (condition.present) {
+      map['condition'] = Variable<String>(condition.value);
     }
-    if (returnCondition.present) {
-      map['return_condition'] = Variable<String>(returnCondition.value);
+    if (returnedAt.present) {
+      map['returned_at'] = Variable<DateTime>(returnedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     return map;
   }
@@ -2281,328 +2147,9 @@ class BorrowItemsCompanion extends UpdateCompanion<BorrowItem> {
           ..write('id: $id, ')
           ..write('borrowRecordId: $borrowRecordId, ')
           ..write('itemId: $itemId, ')
-          ..write('quantity: $quantity, ')
-          ..write('returnCondition: $returnCondition')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $BorrowItemConditionsTable extends BorrowItemConditions
-    with TableInfo<$BorrowItemConditionsTable, BorrowItemCondition> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $BorrowItemConditionsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _borrowItemIdMeta = const VerificationMeta(
-    'borrowItemId',
-  );
-  @override
-  late final GeneratedColumn<int> borrowItemId = GeneratedColumn<int>(
-    'borrow_item_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES borrow_items (id)',
-    ),
-  );
-  static const VerificationMeta _quantityUnitMeta = const VerificationMeta(
-    'quantityUnit',
-  );
-  @override
-  late final GeneratedColumn<int> quantityUnit = GeneratedColumn<int>(
-    'quantity_unit',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _conditionMeta = const VerificationMeta(
-    'condition',
-  );
-  @override
-  late final GeneratedColumn<String> condition = GeneratedColumn<String>(
-    'condition',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    borrowItemId,
-    quantityUnit,
-    condition,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'borrow_item_conditions';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<BorrowItemCondition> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('borrow_item_id')) {
-      context.handle(
-        _borrowItemIdMeta,
-        borrowItemId.isAcceptableOrUnknown(
-          data['borrow_item_id']!,
-          _borrowItemIdMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_borrowItemIdMeta);
-    }
-    if (data.containsKey('quantity_unit')) {
-      context.handle(
-        _quantityUnitMeta,
-        quantityUnit.isAcceptableOrUnknown(
-          data['quantity_unit']!,
-          _quantityUnitMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_quantityUnitMeta);
-    }
-    if (data.containsKey('condition')) {
-      context.handle(
-        _conditionMeta,
-        condition.isAcceptableOrUnknown(data['condition']!, _conditionMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_conditionMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  BorrowItemCondition map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return BorrowItemCondition(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      borrowItemId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}borrow_item_id'],
-      )!,
-      quantityUnit: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}quantity_unit'],
-      )!,
-      condition: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}condition'],
-      )!,
-    );
-  }
-
-  @override
-  $BorrowItemConditionsTable createAlias(String alias) {
-    return $BorrowItemConditionsTable(attachedDatabase, alias);
-  }
-}
-
-class BorrowItemCondition extends DataClass
-    implements Insertable<BorrowItemCondition> {
-  final int id;
-  final int borrowItemId;
-  final int quantityUnit;
-  final String condition;
-  const BorrowItemCondition({
-    required this.id,
-    required this.borrowItemId,
-    required this.quantityUnit,
-    required this.condition,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['borrow_item_id'] = Variable<int>(borrowItemId);
-    map['quantity_unit'] = Variable<int>(quantityUnit);
-    map['condition'] = Variable<String>(condition);
-    return map;
-  }
-
-  BorrowItemConditionsCompanion toCompanion(bool nullToAbsent) {
-    return BorrowItemConditionsCompanion(
-      id: Value(id),
-      borrowItemId: Value(borrowItemId),
-      quantityUnit: Value(quantityUnit),
-      condition: Value(condition),
-    );
-  }
-
-  factory BorrowItemCondition.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return BorrowItemCondition(
-      id: serializer.fromJson<int>(json['id']),
-      borrowItemId: serializer.fromJson<int>(json['borrowItemId']),
-      quantityUnit: serializer.fromJson<int>(json['quantityUnit']),
-      condition: serializer.fromJson<String>(json['condition']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'borrowItemId': serializer.toJson<int>(borrowItemId),
-      'quantityUnit': serializer.toJson<int>(quantityUnit),
-      'condition': serializer.toJson<String>(condition),
-    };
-  }
-
-  BorrowItemCondition copyWith({
-    int? id,
-    int? borrowItemId,
-    int? quantityUnit,
-    String? condition,
-  }) => BorrowItemCondition(
-    id: id ?? this.id,
-    borrowItemId: borrowItemId ?? this.borrowItemId,
-    quantityUnit: quantityUnit ?? this.quantityUnit,
-    condition: condition ?? this.condition,
-  );
-  BorrowItemCondition copyWithCompanion(BorrowItemConditionsCompanion data) {
-    return BorrowItemCondition(
-      id: data.id.present ? data.id.value : this.id,
-      borrowItemId: data.borrowItemId.present
-          ? data.borrowItemId.value
-          : this.borrowItemId,
-      quantityUnit: data.quantityUnit.present
-          ? data.quantityUnit.value
-          : this.quantityUnit,
-      condition: data.condition.present ? data.condition.value : this.condition,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('BorrowItemCondition(')
-          ..write('id: $id, ')
-          ..write('borrowItemId: $borrowItemId, ')
-          ..write('quantityUnit: $quantityUnit, ')
-          ..write('condition: $condition')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, borrowItemId, quantityUnit, condition);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is BorrowItemCondition &&
-          other.id == this.id &&
-          other.borrowItemId == this.borrowItemId &&
-          other.quantityUnit == this.quantityUnit &&
-          other.condition == this.condition);
-}
-
-class BorrowItemConditionsCompanion
-    extends UpdateCompanion<BorrowItemCondition> {
-  final Value<int> id;
-  final Value<int> borrowItemId;
-  final Value<int> quantityUnit;
-  final Value<String> condition;
-  const BorrowItemConditionsCompanion({
-    this.id = const Value.absent(),
-    this.borrowItemId = const Value.absent(),
-    this.quantityUnit = const Value.absent(),
-    this.condition = const Value.absent(),
-  });
-  BorrowItemConditionsCompanion.insert({
-    this.id = const Value.absent(),
-    required int borrowItemId,
-    required int quantityUnit,
-    required String condition,
-  }) : borrowItemId = Value(borrowItemId),
-       quantityUnit = Value(quantityUnit),
-       condition = Value(condition);
-  static Insertable<BorrowItemCondition> custom({
-    Expression<int>? id,
-    Expression<int>? borrowItemId,
-    Expression<int>? quantityUnit,
-    Expression<String>? condition,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (borrowItemId != null) 'borrow_item_id': borrowItemId,
-      if (quantityUnit != null) 'quantity_unit': quantityUnit,
-      if (condition != null) 'condition': condition,
-    });
-  }
-
-  BorrowItemConditionsCompanion copyWith({
-    Value<int>? id,
-    Value<int>? borrowItemId,
-    Value<int>? quantityUnit,
-    Value<String>? condition,
-  }) {
-    return BorrowItemConditionsCompanion(
-      id: id ?? this.id,
-      borrowItemId: borrowItemId ?? this.borrowItemId,
-      quantityUnit: quantityUnit ?? this.quantityUnit,
-      condition: condition ?? this.condition,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (borrowItemId.present) {
-      map['borrow_item_id'] = Variable<int>(borrowItemId.value);
-    }
-    if (quantityUnit.present) {
-      map['quantity_unit'] = Variable<int>(quantityUnit.value);
-    }
-    if (condition.present) {
-      map['condition'] = Variable<String>(condition.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('BorrowItemConditionsCompanion(')
-          ..write('id: $id, ')
-          ..write('borrowItemId: $borrowItemId, ')
-          ..write('quantityUnit: $quantityUnit, ')
-          ..write('condition: $condition')
+          ..write('condition: $condition, ')
+          ..write('returnedAt: $returnedAt, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -3261,11 +2808,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StudentsTable students = $StudentsTable(this);
   late final $StoragesTable storages = $StoragesTable(this);
   late final $ItemsTable items = $ItemsTable(this);
-  late final $ItemUnitsTable itemUnits = $ItemUnitsTable(this);
   late final $BorrowRecordsTable borrowRecords = $BorrowRecordsTable(this);
   late final $BorrowItemsTable borrowItems = $BorrowItemsTable(this);
-  late final $BorrowItemConditionsTable borrowItemConditions =
-      $BorrowItemConditionsTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
   late final $TagsTable tags = $TagsTable(this);
   @override
@@ -3276,10 +2820,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     students,
     storages,
     items,
-    itemUnits,
     borrowRecords,
     borrowItems,
-    borrowItemConditions,
     settings,
     tags,
   ];
@@ -3874,22 +3416,30 @@ typedef $$StoragesTableProcessedTableManager =
 typedef $$ItemsTableCreateCompanionBuilder =
     ItemsCompanion Function({
       Value<int> id,
-      required String name,
-      Value<String?> description,
-      required int storageId,
-      Value<int> totalQuantity,
-      Value<int> availableQuantity,
+      required String toolName,
+      required String model,
+      required String productNo,
+      required String serialNo,
+      Value<String?> remarks,
+      required String year,
+      Value<String> status,
+      Value<int?> storageId,
       Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
     });
 typedef $$ItemsTableUpdateCompanionBuilder =
     ItemsCompanion Function({
       Value<int> id,
-      Value<String> name,
-      Value<String?> description,
-      Value<int> storageId,
-      Value<int> totalQuantity,
-      Value<int> availableQuantity,
+      Value<String> toolName,
+      Value<String> model,
+      Value<String> productNo,
+      Value<String> serialNo,
+      Value<String?> remarks,
+      Value<String> year,
+      Value<String> status,
+      Value<int?> storageId,
       Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
     });
 
 final class $$ItemsTableReferences
@@ -3899,9 +3449,9 @@ final class $$ItemsTableReferences
   static $StoragesTable _storageIdTable(_$AppDatabase db) => db.storages
       .createAlias($_aliasNameGenerator(db.items.storageId, db.storages.id));
 
-  $$StoragesTableProcessedTableManager get storageId {
-    final $_column = $_itemColumn<int>('storage_id')!;
-
+  $$StoragesTableProcessedTableManager? get storageId {
+    final $_column = $_itemColumn<int>('storage_id');
+    if ($_column == null) return null;
     final manager = $$StoragesTableTableManager(
       $_db,
       $_db.storages,
@@ -3910,24 +3460,6 @@ final class $$ItemsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<$ItemUnitsTable, List<ItemUnit>>
-  _itemUnitsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.itemUnits,
-    aliasName: $_aliasNameGenerator(db.items.id, db.itemUnits.itemId),
-  );
-
-  $$ItemUnitsTableProcessedTableManager get itemUnitsRefs {
-    final manager = $$ItemUnitsTableTableManager(
-      $_db,
-      $_db.itemUnits,
-    ).filter((f) => f.itemId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_itemUnitsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 
@@ -3963,28 +3495,48 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnFilters<String> get toolName => $composableBuilder(
+    column: $table.toolName,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get description => $composableBuilder(
-    column: $table.description,
+  ColumnFilters<String> get model => $composableBuilder(
+    column: $table.model,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get totalQuantity => $composableBuilder(
-    column: $table.totalQuantity,
+  ColumnFilters<String> get productNo => $composableBuilder(
+    column: $table.productNo,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get availableQuantity => $composableBuilder(
-    column: $table.availableQuantity,
+  ColumnFilters<String> get serialNo => $composableBuilder(
+    column: $table.serialNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remarks => $composableBuilder(
+    column: $table.remarks,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get year => $composableBuilder(
+    column: $table.year,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4009,31 +3561,6 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
           ),
     );
     return composer;
-  }
-
-  Expression<bool> itemUnitsRefs(
-    Expression<bool> Function($$ItemUnitsTableFilterComposer f) f,
-  ) {
-    final $$ItemUnitsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.itemUnits,
-      getReferencedColumn: (t) => t.itemId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ItemUnitsTableFilterComposer(
-            $db: $db,
-            $table: $db.itemUnits,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
   }
 
   Expression<bool> borrowItemsRefs(
@@ -4076,28 +3603,48 @@ class $$ItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnOrderings<String> get toolName => $composableBuilder(
+    column: $table.toolName,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get description => $composableBuilder(
-    column: $table.description,
+  ColumnOrderings<String> get model => $composableBuilder(
+    column: $table.model,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get totalQuantity => $composableBuilder(
-    column: $table.totalQuantity,
+  ColumnOrderings<String> get productNo => $composableBuilder(
+    column: $table.productNo,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get availableQuantity => $composableBuilder(
-    column: $table.availableQuantity,
+  ColumnOrderings<String> get serialNo => $composableBuilder(
+    column: $table.serialNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remarks => $composableBuilder(
+    column: $table.remarks,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get year => $composableBuilder(
+    column: $table.year,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -4137,26 +3684,32 @@ class $$ItemsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get toolName =>
+      $composableBuilder(column: $table.toolName, builder: (column) => column);
 
-  GeneratedColumn<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get model =>
+      $composableBuilder(column: $table.model, builder: (column) => column);
 
-  GeneratedColumn<int> get totalQuantity => $composableBuilder(
-    column: $table.totalQuantity,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get productNo =>
+      $composableBuilder(column: $table.productNo, builder: (column) => column);
 
-  GeneratedColumn<int> get availableQuantity => $composableBuilder(
-    column: $table.availableQuantity,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get serialNo =>
+      $composableBuilder(column: $table.serialNo, builder: (column) => column);
+
+  GeneratedColumn<String> get remarks =>
+      $composableBuilder(column: $table.remarks, builder: (column) => column);
+
+  GeneratedColumn<String> get year =>
+      $composableBuilder(column: $table.year, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$StoragesTableAnnotationComposer get storageId {
     final $$StoragesTableAnnotationComposer composer = $composerBuilder(
@@ -4179,31 +3732,6 @@ class $$ItemsTableAnnotationComposer
           ),
     );
     return composer;
-  }
-
-  Expression<T> itemUnitsRefs<T extends Object>(
-    Expression<T> Function($$ItemUnitsTableAnnotationComposer a) f,
-  ) {
-    final $$ItemUnitsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.itemUnits,
-      getReferencedColumn: (t) => t.itemId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ItemUnitsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.itemUnits,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
   }
 
   Expression<T> borrowItemsRefs<T extends Object>(
@@ -4245,11 +3773,7 @@ class $$ItemsTableTableManager
           $$ItemsTableUpdateCompanionBuilder,
           (Item, $$ItemsTableReferences),
           Item,
-          PrefetchHooks Function({
-            bool storageId,
-            bool itemUnitsRefs,
-            bool borrowItemsRefs,
-          })
+          PrefetchHooks Function({bool storageId, bool borrowItemsRefs})
         > {
   $$ItemsTableTableManager(_$AppDatabase db, $ItemsTable table)
     : super(
@@ -4265,38 +3789,54 @@ class $$ItemsTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String?> description = const Value.absent(),
-                Value<int> storageId = const Value.absent(),
-                Value<int> totalQuantity = const Value.absent(),
-                Value<int> availableQuantity = const Value.absent(),
+                Value<String> toolName = const Value.absent(),
+                Value<String> model = const Value.absent(),
+                Value<String> productNo = const Value.absent(),
+                Value<String> serialNo = const Value.absent(),
+                Value<String?> remarks = const Value.absent(),
+                Value<String> year = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> storageId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
               }) => ItemsCompanion(
                 id: id,
-                name: name,
-                description: description,
+                toolName: toolName,
+                model: model,
+                productNo: productNo,
+                serialNo: serialNo,
+                remarks: remarks,
+                year: year,
+                status: status,
                 storageId: storageId,
-                totalQuantity: totalQuantity,
-                availableQuantity: availableQuantity,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required String name,
-                Value<String?> description = const Value.absent(),
-                required int storageId,
-                Value<int> totalQuantity = const Value.absent(),
-                Value<int> availableQuantity = const Value.absent(),
+                required String toolName,
+                required String model,
+                required String productNo,
+                required String serialNo,
+                Value<String?> remarks = const Value.absent(),
+                required String year,
+                Value<String> status = const Value.absent(),
+                Value<int?> storageId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
               }) => ItemsCompanion.insert(
                 id: id,
-                name: name,
-                description: description,
+                toolName: toolName,
+                model: model,
+                productNo: productNo,
+                serialNo: serialNo,
+                remarks: remarks,
+                year: year,
+                status: status,
                 storageId: storageId,
-                totalQuantity: totalQuantity,
-                availableQuantity: availableQuantity,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -4305,15 +3845,10 @@ class $$ItemsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({
-                storageId = false,
-                itemUnitsRefs = false,
-                borrowItemsRefs = false,
-              }) {
+              ({storageId = false, borrowItemsRefs = false}) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
-                    if (itemUnitsRefs) db.itemUnits,
                     if (borrowItemsRefs) db.borrowItems,
                   ],
                   addJoins:
@@ -4350,23 +3885,6 @@ class $$ItemsTableTableManager
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
-                      if (itemUnitsRefs)
-                        await $_getPrefetchedData<Item, $ItemsTable, ItemUnit>(
-                          currentTable: table,
-                          referencedTable: $$ItemsTableReferences
-                              ._itemUnitsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$ItemsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).itemUnitsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.itemId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
                       if (borrowItemsRefs)
                         await $_getPrefetchedData<
                           Item,
@@ -4408,323 +3926,7 @@ typedef $$ItemsTableProcessedTableManager =
       $$ItemsTableUpdateCompanionBuilder,
       (Item, $$ItemsTableReferences),
       Item,
-      PrefetchHooks Function({
-        bool storageId,
-        bool itemUnitsRefs,
-        bool borrowItemsRefs,
-      })
-    >;
-typedef $$ItemUnitsTableCreateCompanionBuilder =
-    ItemUnitsCompanion Function({
-      Value<int> id,
-      required int itemId,
-      required String serialNo,
-      required String status,
-      Value<DateTime> createdAt,
-    });
-typedef $$ItemUnitsTableUpdateCompanionBuilder =
-    ItemUnitsCompanion Function({
-      Value<int> id,
-      Value<int> itemId,
-      Value<String> serialNo,
-      Value<String> status,
-      Value<DateTime> createdAt,
-    });
-
-final class $$ItemUnitsTableReferences
-    extends BaseReferences<_$AppDatabase, $ItemUnitsTable, ItemUnit> {
-  $$ItemUnitsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $ItemsTable _itemIdTable(_$AppDatabase db) => db.items.createAlias(
-    $_aliasNameGenerator(db.itemUnits.itemId, db.items.id),
-  );
-
-  $$ItemsTableProcessedTableManager get itemId {
-    final $_column = $_itemColumn<int>('item_id')!;
-
-    final manager = $$ItemsTableTableManager(
-      $_db,
-      $_db.items,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $$ItemUnitsTableFilterComposer
-    extends Composer<_$AppDatabase, $ItemUnitsTable> {
-  $$ItemUnitsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get serialNo => $composableBuilder(
-    column: $table.serialNo,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$ItemsTableFilterComposer get itemId {
-    final $$ItemsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.itemId,
-      referencedTable: $db.items,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableFilterComposer(
-            $db: $db,
-            $table: $db.items,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ItemUnitsTableOrderingComposer
-    extends Composer<_$AppDatabase, $ItemUnitsTable> {
-  $$ItemUnitsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get serialNo => $composableBuilder(
-    column: $table.serialNo,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$ItemsTableOrderingComposer get itemId {
-    final $$ItemsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.itemId,
-      referencedTable: $db.items,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableOrderingComposer(
-            $db: $db,
-            $table: $db.items,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ItemUnitsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ItemUnitsTable> {
-  $$ItemUnitsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get serialNo =>
-      $composableBuilder(column: $table.serialNo, builder: (column) => column);
-
-  GeneratedColumn<String> get status =>
-      $composableBuilder(column: $table.status, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  $$ItemsTableAnnotationComposer get itemId {
-    final $$ItemsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.itemId,
-      referencedTable: $db.items,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ItemsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.items,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ItemUnitsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $ItemUnitsTable,
-          ItemUnit,
-          $$ItemUnitsTableFilterComposer,
-          $$ItemUnitsTableOrderingComposer,
-          $$ItemUnitsTableAnnotationComposer,
-          $$ItemUnitsTableCreateCompanionBuilder,
-          $$ItemUnitsTableUpdateCompanionBuilder,
-          (ItemUnit, $$ItemUnitsTableReferences),
-          ItemUnit,
-          PrefetchHooks Function({bool itemId})
-        > {
-  $$ItemUnitsTableTableManager(_$AppDatabase db, $ItemUnitsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$ItemUnitsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ItemUnitsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ItemUnitsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> itemId = const Value.absent(),
-                Value<String> serialNo = const Value.absent(),
-                Value<String> status = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => ItemUnitsCompanion(
-                id: id,
-                itemId: itemId,
-                serialNo: serialNo,
-                status: status,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int itemId,
-                required String serialNo,
-                required String status,
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => ItemUnitsCompanion.insert(
-                id: id,
-                itemId: itemId,
-                serialNo: serialNo,
-                status: status,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ItemUnitsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({itemId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (itemId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.itemId,
-                                referencedTable: $$ItemUnitsTableReferences
-                                    ._itemIdTable(db),
-                                referencedColumn: $$ItemUnitsTableReferences
-                                    ._itemIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$ItemUnitsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $ItemUnitsTable,
-      ItemUnit,
-      $$ItemUnitsTableFilterComposer,
-      $$ItemUnitsTableOrderingComposer,
-      $$ItemUnitsTableAnnotationComposer,
-      $$ItemUnitsTableCreateCompanionBuilder,
-      $$ItemUnitsTableUpdateCompanionBuilder,
-      (ItemUnit, $$ItemUnitsTableReferences),
-      ItemUnit,
-      PrefetchHooks Function({bool itemId})
+      PrefetchHooks Function({bool storageId, bool borrowItemsRefs})
     >;
 typedef $$BorrowRecordsTableCreateCompanionBuilder =
     BorrowRecordsCompanion Function({
@@ -5169,16 +4371,18 @@ typedef $$BorrowItemsTableCreateCompanionBuilder =
       Value<int> id,
       required int borrowRecordId,
       required int itemId,
-      required int quantity,
-      Value<String?> returnCondition,
+      Value<String?> condition,
+      Value<DateTime?> returnedAt,
+      Value<DateTime> createdAt,
     });
 typedef $$BorrowItemsTableUpdateCompanionBuilder =
     BorrowItemsCompanion Function({
       Value<int> id,
       Value<int> borrowRecordId,
       Value<int> itemId,
-      Value<int> quantity,
-      Value<String?> returnCondition,
+      Value<String?> condition,
+      Value<DateTime?> returnedAt,
+      Value<DateTime> createdAt,
     });
 
 final class $$BorrowItemsTableReferences
@@ -5224,34 +4428,6 @@ final class $$BorrowItemsTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
-
-  static MultiTypedResultKey<
-    $BorrowItemConditionsTable,
-    List<BorrowItemCondition>
-  >
-  _borrowItemConditionsRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.borrowItemConditions,
-        aliasName: $_aliasNameGenerator(
-          db.borrowItems.id,
-          db.borrowItemConditions.borrowItemId,
-        ),
-      );
-
-  $$BorrowItemConditionsTableProcessedTableManager
-  get borrowItemConditionsRefs {
-    final manager = $$BorrowItemConditionsTableTableManager(
-      $_db,
-      $_db.borrowItemConditions,
-    ).filter((f) => f.borrowItemId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(
-      _borrowItemConditionsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
 }
 
 class $$BorrowItemsTableFilterComposer
@@ -5268,13 +4444,18 @@ class $$BorrowItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get quantity => $composableBuilder(
-    column: $table.quantity,
+  ColumnFilters<String> get condition => $composableBuilder(
+    column: $table.condition,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get returnCondition => $composableBuilder(
-    column: $table.returnCondition,
+  ColumnFilters<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5323,31 +4504,6 @@ class $$BorrowItemsTableFilterComposer
     );
     return composer;
   }
-
-  Expression<bool> borrowItemConditionsRefs(
-    Expression<bool> Function($$BorrowItemConditionsTableFilterComposer f) f,
-  ) {
-    final $$BorrowItemConditionsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.borrowItemConditions,
-      getReferencedColumn: (t) => t.borrowItemId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$BorrowItemConditionsTableFilterComposer(
-            $db: $db,
-            $table: $db.borrowItemConditions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$BorrowItemsTableOrderingComposer
@@ -5364,13 +4520,18 @@ class $$BorrowItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get quantity => $composableBuilder(
-    column: $table.quantity,
+  ColumnOrderings<String> get condition => $composableBuilder(
+    column: $table.condition,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get returnCondition => $composableBuilder(
-    column: $table.returnCondition,
+  ColumnOrderings<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5433,13 +4594,16 @@ class $$BorrowItemsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get quantity =>
-      $composableBuilder(column: $table.quantity, builder: (column) => column);
+  GeneratedColumn<String> get condition =>
+      $composableBuilder(column: $table.condition, builder: (column) => column);
 
-  GeneratedColumn<String> get returnCondition => $composableBuilder(
-    column: $table.returnCondition,
+  GeneratedColumn<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$BorrowRecordsTableAnnotationComposer get borrowRecordId {
     final $$BorrowRecordsTableAnnotationComposer composer = $composerBuilder(
@@ -5486,32 +4650,6 @@ class $$BorrowItemsTableAnnotationComposer
     );
     return composer;
   }
-
-  Expression<T> borrowItemConditionsRefs<T extends Object>(
-    Expression<T> Function($$BorrowItemConditionsTableAnnotationComposer a) f,
-  ) {
-    final $$BorrowItemConditionsTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.borrowItemConditions,
-          getReferencedColumn: (t) => t.borrowItemId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$BorrowItemConditionsTableAnnotationComposer(
-                $db: $db,
-                $table: $db.borrowItemConditions,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
 }
 
 class $$BorrowItemsTableTableManager
@@ -5527,11 +4665,7 @@ class $$BorrowItemsTableTableManager
           $$BorrowItemsTableUpdateCompanionBuilder,
           (BorrowItem, $$BorrowItemsTableReferences),
           BorrowItem,
-          PrefetchHooks Function({
-            bool borrowRecordId,
-            bool itemId,
-            bool borrowItemConditionsRefs,
-          })
+          PrefetchHooks Function({bool borrowRecordId, bool itemId})
         > {
   $$BorrowItemsTableTableManager(_$AppDatabase db, $BorrowItemsTable table)
     : super(
@@ -5549,28 +4683,32 @@ class $$BorrowItemsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> borrowRecordId = const Value.absent(),
                 Value<int> itemId = const Value.absent(),
-                Value<int> quantity = const Value.absent(),
-                Value<String?> returnCondition = const Value.absent(),
+                Value<String?> condition = const Value.absent(),
+                Value<DateTime?> returnedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
               }) => BorrowItemsCompanion(
                 id: id,
                 borrowRecordId: borrowRecordId,
                 itemId: itemId,
-                quantity: quantity,
-                returnCondition: returnCondition,
+                condition: condition,
+                returnedAt: returnedAt,
+                createdAt: createdAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required int borrowRecordId,
                 required int itemId,
-                required int quantity,
-                Value<String?> returnCondition = const Value.absent(),
+                Value<String?> condition = const Value.absent(),
+                Value<DateTime?> returnedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
               }) => BorrowItemsCompanion.insert(
                 id: id,
                 borrowRecordId: borrowRecordId,
                 itemId: itemId,
-                quantity: quantity,
-                returnCondition: returnCondition,
+                condition: condition,
+                returnedAt: returnedAt,
+                createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -5580,373 +4718,7 @@ class $$BorrowItemsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback:
-              ({
-                borrowRecordId = false,
-                itemId = false,
-                borrowItemConditionsRefs = false,
-              }) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (borrowItemConditionsRefs) db.borrowItemConditions,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (borrowRecordId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.borrowRecordId,
-                                    referencedTable:
-                                        $$BorrowItemsTableReferences
-                                            ._borrowRecordIdTable(db),
-                                    referencedColumn:
-                                        $$BorrowItemsTableReferences
-                                            ._borrowRecordIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
-                        }
-                        if (itemId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.itemId,
-                                    referencedTable:
-                                        $$BorrowItemsTableReferences
-                                            ._itemIdTable(db),
-                                    referencedColumn:
-                                        $$BorrowItemsTableReferences
-                                            ._itemIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
-                        }
-
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (borrowItemConditionsRefs)
-                        await $_getPrefetchedData<
-                          BorrowItem,
-                          $BorrowItemsTable,
-                          BorrowItemCondition
-                        >(
-                          currentTable: table,
-                          referencedTable: $$BorrowItemsTableReferences
-                              ._borrowItemConditionsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$BorrowItemsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).borrowItemConditionsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.borrowItemId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
-                  },
-                );
-              },
-        ),
-      );
-}
-
-typedef $$BorrowItemsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $BorrowItemsTable,
-      BorrowItem,
-      $$BorrowItemsTableFilterComposer,
-      $$BorrowItemsTableOrderingComposer,
-      $$BorrowItemsTableAnnotationComposer,
-      $$BorrowItemsTableCreateCompanionBuilder,
-      $$BorrowItemsTableUpdateCompanionBuilder,
-      (BorrowItem, $$BorrowItemsTableReferences),
-      BorrowItem,
-      PrefetchHooks Function({
-        bool borrowRecordId,
-        bool itemId,
-        bool borrowItemConditionsRefs,
-      })
-    >;
-typedef $$BorrowItemConditionsTableCreateCompanionBuilder =
-    BorrowItemConditionsCompanion Function({
-      Value<int> id,
-      required int borrowItemId,
-      required int quantityUnit,
-      required String condition,
-    });
-typedef $$BorrowItemConditionsTableUpdateCompanionBuilder =
-    BorrowItemConditionsCompanion Function({
-      Value<int> id,
-      Value<int> borrowItemId,
-      Value<int> quantityUnit,
-      Value<String> condition,
-    });
-
-final class $$BorrowItemConditionsTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $BorrowItemConditionsTable,
-          BorrowItemCondition
-        > {
-  $$BorrowItemConditionsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $BorrowItemsTable _borrowItemIdTable(_$AppDatabase db) =>
-      db.borrowItems.createAlias(
-        $_aliasNameGenerator(
-          db.borrowItemConditions.borrowItemId,
-          db.borrowItems.id,
-        ),
-      );
-
-  $$BorrowItemsTableProcessedTableManager get borrowItemId {
-    final $_column = $_itemColumn<int>('borrow_item_id')!;
-
-    final manager = $$BorrowItemsTableTableManager(
-      $_db,
-      $_db.borrowItems,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_borrowItemIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $$BorrowItemConditionsTableFilterComposer
-    extends Composer<_$AppDatabase, $BorrowItemConditionsTable> {
-  $$BorrowItemConditionsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get quantityUnit => $composableBuilder(
-    column: $table.quantityUnit,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get condition => $composableBuilder(
-    column: $table.condition,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$BorrowItemsTableFilterComposer get borrowItemId {
-    final $$BorrowItemsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.borrowItemId,
-      referencedTable: $db.borrowItems,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$BorrowItemsTableFilterComposer(
-            $db: $db,
-            $table: $db.borrowItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$BorrowItemConditionsTableOrderingComposer
-    extends Composer<_$AppDatabase, $BorrowItemConditionsTable> {
-  $$BorrowItemConditionsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get quantityUnit => $composableBuilder(
-    column: $table.quantityUnit,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get condition => $composableBuilder(
-    column: $table.condition,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$BorrowItemsTableOrderingComposer get borrowItemId {
-    final $$BorrowItemsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.borrowItemId,
-      referencedTable: $db.borrowItems,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$BorrowItemsTableOrderingComposer(
-            $db: $db,
-            $table: $db.borrowItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$BorrowItemConditionsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $BorrowItemConditionsTable> {
-  $$BorrowItemConditionsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get quantityUnit => $composableBuilder(
-    column: $table.quantityUnit,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get condition =>
-      $composableBuilder(column: $table.condition, builder: (column) => column);
-
-  $$BorrowItemsTableAnnotationComposer get borrowItemId {
-    final $$BorrowItemsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.borrowItemId,
-      referencedTable: $db.borrowItems,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$BorrowItemsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.borrowItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$BorrowItemConditionsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $BorrowItemConditionsTable,
-          BorrowItemCondition,
-          $$BorrowItemConditionsTableFilterComposer,
-          $$BorrowItemConditionsTableOrderingComposer,
-          $$BorrowItemConditionsTableAnnotationComposer,
-          $$BorrowItemConditionsTableCreateCompanionBuilder,
-          $$BorrowItemConditionsTableUpdateCompanionBuilder,
-          (BorrowItemCondition, $$BorrowItemConditionsTableReferences),
-          BorrowItemCondition,
-          PrefetchHooks Function({bool borrowItemId})
-        > {
-  $$BorrowItemConditionsTableTableManager(
-    _$AppDatabase db,
-    $BorrowItemConditionsTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$BorrowItemConditionsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$BorrowItemConditionsTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$BorrowItemConditionsTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> borrowItemId = const Value.absent(),
-                Value<int> quantityUnit = const Value.absent(),
-                Value<String> condition = const Value.absent(),
-              }) => BorrowItemConditionsCompanion(
-                id: id,
-                borrowItemId: borrowItemId,
-                quantityUnit: quantityUnit,
-                condition: condition,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int borrowItemId,
-                required int quantityUnit,
-                required String condition,
-              }) => BorrowItemConditionsCompanion.insert(
-                id: id,
-                borrowItemId: borrowItemId,
-                quantityUnit: quantityUnit,
-                condition: condition,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$BorrowItemConditionsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({borrowItemId = false}) {
+          prefetchHooksCallback: ({borrowRecordId = false, itemId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -5966,18 +4738,29 @@ class $$BorrowItemConditionsTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (borrowItemId) {
+                    if (borrowRecordId) {
                       state =
                           state.withJoin(
                                 currentTable: table,
-                                currentColumn: table.borrowItemId,
-                                referencedTable:
-                                    $$BorrowItemConditionsTableReferences
-                                        ._borrowItemIdTable(db),
-                                referencedColumn:
-                                    $$BorrowItemConditionsTableReferences
-                                        ._borrowItemIdTable(db)
-                                        .id,
+                                currentColumn: table.borrowRecordId,
+                                referencedTable: $$BorrowItemsTableReferences
+                                    ._borrowRecordIdTable(db),
+                                referencedColumn: $$BorrowItemsTableReferences
+                                    ._borrowRecordIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+                    if (itemId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.itemId,
+                                referencedTable: $$BorrowItemsTableReferences
+                                    ._itemIdTable(db),
+                                referencedColumn: $$BorrowItemsTableReferences
+                                    ._itemIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -5993,19 +4776,19 @@ class $$BorrowItemConditionsTableTableManager
       );
 }
 
-typedef $$BorrowItemConditionsTableProcessedTableManager =
+typedef $$BorrowItemsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $BorrowItemConditionsTable,
-      BorrowItemCondition,
-      $$BorrowItemConditionsTableFilterComposer,
-      $$BorrowItemConditionsTableOrderingComposer,
-      $$BorrowItemConditionsTableAnnotationComposer,
-      $$BorrowItemConditionsTableCreateCompanionBuilder,
-      $$BorrowItemConditionsTableUpdateCompanionBuilder,
-      (BorrowItemCondition, $$BorrowItemConditionsTableReferences),
-      BorrowItemCondition,
-      PrefetchHooks Function({bool borrowItemId})
+      $BorrowItemsTable,
+      BorrowItem,
+      $$BorrowItemsTableFilterComposer,
+      $$BorrowItemsTableOrderingComposer,
+      $$BorrowItemsTableAnnotationComposer,
+      $$BorrowItemsTableCreateCompanionBuilder,
+      $$BorrowItemsTableUpdateCompanionBuilder,
+      (BorrowItem, $$BorrowItemsTableReferences),
+      BorrowItem,
+      PrefetchHooks Function({bool borrowRecordId, bool itemId})
     >;
 typedef $$SettingsTableCreateCompanionBuilder =
     SettingsCompanion Function({
@@ -6374,14 +5157,10 @@ class $AppDatabaseManager {
       $$StoragesTableTableManager(_db, _db.storages);
   $$ItemsTableTableManager get items =>
       $$ItemsTableTableManager(_db, _db.items);
-  $$ItemUnitsTableTableManager get itemUnits =>
-      $$ItemUnitsTableTableManager(_db, _db.itemUnits);
   $$BorrowRecordsTableTableManager get borrowRecords =>
       $$BorrowRecordsTableTableManager(_db, _db.borrowRecords);
   $$BorrowItemsTableTableManager get borrowItems =>
       $$BorrowItemsTableTableManager(_db, _db.borrowItems);
-  $$BorrowItemConditionsTableTableManager get borrowItemConditions =>
-      $$BorrowItemConditionsTableTableManager(_db, _db.borrowItemConditions);
   $$SettingsTableTableManager get settings =>
       $$SettingsTableTableManager(_db, _db.settings);
   $$TagsTableTableManager get tags => $$TagsTableTableManager(_db, _db.tags);

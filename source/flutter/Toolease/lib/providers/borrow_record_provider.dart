@@ -59,6 +59,68 @@ class BorrowRecordNotifier extends StateNotifier<AsyncValue<List<BorrowRecord>>>
     state = const AsyncValue.loading();
     await _loadBorrowRecords();
   }
+
+  /// Create borrow record with per-unit items
+  Future<int> createBorrowRecord({
+    required int studentId,
+    required List<int> itemIds,
+  }) async {
+    try {
+      final databaseService = _ref.read(databaseServiceProvider);
+      final recordId = await databaseService.createBorrowRecord(
+        studentId: studentId,
+        itemIds: itemIds,
+      );
+      await refreshBorrowRecords();
+      _ref.invalidate(allBorrowRecordsProvider);
+      _ref.invalidate(activeBorrowRecordsCountProvider);
+      return recordId;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Return items with conditions (supports partial returns)
+  Future<void> returnItems({
+    required int borrowRecordId,
+    required List<({int borrowItemId, ItemCondition condition})> itemReturns,
+  }) async {
+    try {
+      final databaseService = _ref.read(databaseServiceProvider);
+      await databaseService.returnItems(
+        borrowRecordId: borrowRecordId,
+        itemReturns: itemReturns,
+      );
+      await refreshBorrowRecords();
+      _ref.invalidate(allBorrowRecordsProvider);
+      _ref.invalidate(activeBorrowRecordsCountProvider);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Get borrow record by Borrow ID
+  Future<BorrowRecord?> getBorrowRecordByBorrowId(String borrowId) async {
+    try {
+      final databaseService = _ref.read(databaseServiceProvider);
+      return await databaseService.getBorrowRecordByBorrowId(borrowId);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /// Get active borrows by student
+  Future<List<BorrowRecord>> getActiveBorrowsByStudent(int studentId) async {
+    try {
+      final databaseService = _ref.read(databaseServiceProvider);
+      return await databaseService.getActiveBorrowsByStudent(studentId);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      return [];
+    }
+  }
 }
 
 class ActiveBorrowCountNotifier extends StateNotifier<AsyncValue<int>> {

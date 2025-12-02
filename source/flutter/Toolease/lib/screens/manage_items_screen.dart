@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/item_provider.dart';
 import '../providers/storage_provider.dart';
+import '../providers/websocket_connection_provider.dart';
 import '../models/item.dart' as models;
-import '../core/design_system.dart';
-import '../shared/widgets/app_card.dart';
+import '../shared/rfid_scan_modal.dart';
 
 class ManageItemsScreen extends ConsumerStatefulWidget {
   const ManageItemsScreen({super.key});
@@ -17,6 +17,7 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   int? _selectedStorageId;
+  models.ItemStatus? _selectedStatus;
 
   @override
   void dispose() {
@@ -34,39 +35,50 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
           .toList();
     }
 
+    // Filter by status if selected
+    if (_selectedStatus != null) {
+      filtered = filtered
+          .where((item) => item.status == _selectedStatus)
+          .toList();
+    }
+
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
       filtered = filtered.where((item) {
-        return item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (item.description?.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ??
-                false);
+        return item.toolName.toLowerCase().contains(query) ||
+            item.model.toLowerCase().contains(query) ||
+            item.productNo.toLowerCase().contains(query) ||
+            item.serialNo.toLowerCase().contains(query) ||
+            (item.remarks?.toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
     return filtered;
   }
 
-  Future<void> _showItemDialog({models.Item? item}) async {
-    final nameController = TextEditingController(text: item?.name ?? '');
-    final descriptionController = TextEditingController(
-      text: item?.description ?? '',
-    );
-    final totalQtyController = TextEditingController(text: item?.totalQuantity.toString() ?? '');
-    final availableQtyController = TextEditingController(text: item?.availableQuantity.toString() ?? '');
-    int? selectedStorageId = item?.storageId;
+  Future<void> _showAddItemDialog() async {
+    final toolNameController = TextEditingController();
+    final modelController = TextEditingController();
+    final productNoController = TextEditingController();
+    final serialNoController = TextEditingController();
+    final remarksController = TextEditingController();
+    final yearController = TextEditingController(text: DateTime.now().year.toString());
+    int? selectedStorageId;
     final formKey = GlobalKey<FormState>();
+    bool serialNoLocked = false;
+    
+    // Get Bluetooth service
+    final websocketService = ref.read(websocketServiceProvider);
 
     return showDialog<void>(
       context: context,
-      builder: (BuildContext context) {
-        final storagesAsync = ref.watch(storageNotifierProvider);
-
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text(item == null ? 'Add Item' : 'Edit Item'),
+              title: const Text('Add Item'),
               contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0.0),
               insetPadding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
@@ -79,106 +91,160 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                   child: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         TextFormField(
-                          controller: nameController,
+                          controller: toolNameController,
                           decoration: const InputDecoration(
-                            labelText: 'Item Name',
+                            labelText: 'Tool Name *',
                             border: OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Please enter item name';
+                              return 'Please enter tool name';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: descriptionController,
+                          controller: modelController,
                           decoration: const InputDecoration(
-                            labelText: 'Description',
+                            labelText: 'Model *',
                             border: OutlineInputBorder(),
                           ),
-                          maxLines: 2,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter model';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
-                        storagesAsync.when(
-                          loading: () => const CircularProgressIndicator(),
-                          error: (_, __) =>
-                              const Text('Error loading storages'),
-                          data: (storages) => DropdownButtonFormField<int>(
-                            value: selectedStorageId,
-                            decoration: const InputDecoration(
-                              labelText: 'Storage Location',
-                              border: OutlineInputBorder(),
+                        TextFormField(
+                          controller: productNoController,
+                          decoration: const InputDecoration(
+                            labelText: 'Product No. *',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter product number';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: serialNoController,
+                                decoration: InputDecoration(
+                                  labelText: 'Serial No. (RFID) *',
+                                  border: const OutlineInputBorder(),
+                                  enabled: !serialNoLocked,
+                                ),
+                                readOnly: true,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Please scan RFID tag';
+                                  }
+                                  return null;
+                                },
+                              ),
                             ),
-                            items: storages
-                                .map(
-                                  (storage) => DropdownMenuItem<int>(
-                                    value: storage.id,
-                                    child: Text(storage.name),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedStorageId = value;
-                              });
-                            },
-                            validator: (value) {
-                              if (value == null) {
-                                return 'Please select a storage location';
-                              }
-                              return null;
-                            },
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: serialNoLocked
+                                  ? null
+                                  : () async {
+                                      final tagId = await RFIDScanModal.show(
+                                        context: context,
+                                        websocketService: websocketService,
+                                        customMessage: 'Scan RFID tag for this item',
+                                      );
+                                      if (tagId != null) {
+                                        setDialogState(() {
+                                          serialNoController.text = tagId;
+                                        });
+                                      }
+                                    },
+                              icon: const Icon(Icons.nfc),
+                              label: const Text('Scan'),
+                            ),
+                          ],
+                        ),
+                        if (serialNoLocked)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8, left: 12),
+                            child: Text(
+                              '🔒 Serial No. locked after saving',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: remarksController,
+                          decoration: const InputDecoration(
+                            labelText: 'Remarks',
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: 3,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: totalQtyController,
+                          controller: yearController,
                           decoration: const InputDecoration(
-                            labelText: 'Total Quantity',
+                            labelText: 'Year *',
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Please enter total quantity';
+                              return 'Please enter year';
                             }
-                            final qty = int.tryParse(value.trim());
-                            if (qty == null || qty <= 0) {
-                              return 'Please enter a valid positive number';
+                            final year = int.tryParse(value.trim());
+                            if (year == null || year < 1900 || year > 2100) {
+                              return 'Please enter a valid year';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: availableQtyController,
-                          decoration: const InputDecoration(
-                            labelText: 'Available Quantity',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter available quantity';
-                            }
-                            final qty = int.tryParse(value.trim());
-                            if (qty == null || qty < 0) {
-                              return 'Please enter a valid non-negative number';
-                            }
-                            final totalQty = int.tryParse(totalQtyController.text.trim());
-                            if (totalQty != null && qty > totalQty) {
-                              return 'Available quantity cannot exceed total quantity';
-                            }
-                            return null;
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final storagesAsync = ref.watch(storageNotifierProvider);
+                            return storagesAsync.when(
+                              loading: () => const CircularProgressIndicator(),
+                              error: (_, __) => const Text('Error loading storages'),
+                              data: (storages) => DropdownButtonFormField<int>(
+                                value: selectedStorageId,
+                                decoration: const InputDecoration(
+                                  labelText: 'Storage Location',
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: storages
+                                    .map(
+                                      (storage) => DropdownMenuItem<int>(
+                                        value: storage.id,
+                                        child: Text(storage.name),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    selectedStorageId = value;
+                                  });
+                                },
+                              ),
+                            );
                           },
                         ),
-                        const SizedBox(
-                          height: 24,
-                        ), // Extra spacing for keyboard
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
@@ -191,104 +257,46 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (formKey.currentState!.validate() &&
-                        selectedStorageId != null) {
+                    if (formKey.currentState!.validate()) {
                       try {
-                        final totalQty = int.parse(totalQtyController.text.trim());
-                        final availableQty = int.parse(availableQtyController.text.trim());
-                        if (item == null) {
-                          await ref.read(itemNotifierProvider.notifier).addItem(
-                            nameController.text.trim(),
-                            descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim(),
-                            selectedStorageId!,
-                            totalQty,
-                            availableQty,
-                          );
-                        } else {
-                          await ref.read(itemNotifierProvider.notifier).updateItem(
-                            item.id,
-                            nameController.text.trim(),
-                            descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim(),
-                            selectedStorageId!,
-                            totalQty,
-                            availableQty,
-                          );
-                        }
-
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
+                        await ref.read(itemNotifierProvider.notifier).addItem(
+                              toolName: toolNameController.text.trim(),
+                              model: modelController.text.trim(),
+                              productNo: productNoController.text.trim(),
+                              serialNo: serialNoController.text.trim(),
+                              remarks: remarksController.text.trim().isEmpty
+                                  ? null
+                                  : remarksController.text.trim(),
+                              year: yearController.text.trim(),
+                              storageId: selectedStorageId,
+                            );
+                        
+                        if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                item == null
-                                    ? 'Item added successfully!'
-                                    : 'Item updated successfully!',
-                              ),
+                            const SnackBar(
+                              content: Text('Item added successfully'),
+                              backgroundColor: Colors.green,
                             ),
                           );
+                          Navigator.of(dialogContext).pop();
                         }
                       } catch (e) {
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: ${e.toString()}'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                         }
                       }
                     }
                   },
-                  child: Text(item == null ? 'Add' : 'Update'),
+                  child: const Text('Save'),
                 ),
               ],
             );
           },
-        );
-      },
-    );
-  }
-
-  Future<void> _confirmDelete(models.Item item) async {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Item'),
-          content: Text('Are you sure you want to delete "${item.name}"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () async {
-                try {
-                  await ref
-                      .read(itemNotifierProvider.notifier)
-                      .deleteItem(item.id);
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Item deleted successfully!'),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error deleting item: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
         );
       },
     );
@@ -300,498 +308,307 @@ class _ManageItemsScreenState extends ConsumerState<ManageItemsScreen> {
     final storagesAsync = ref.watch(storageNotifierProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text(
-          'Manage Items',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
+        title: const Text('Manage Items'),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_outlined),
-            onPressed: () => _showItemDialog(),
-            tooltip: 'Add New Item',
-          ),
-        ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header Section
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Inventory Management',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
+      body: Column(
+        children: [
+          // Search and Filter Section
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Theme.of(context).colorScheme.surface,
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search by name, model, product no, or serial no...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Manage your inventory items and stock levels',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: storagesAsync.when(
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                        data: (storages) => DropdownButtonFormField<int>(
+                          value: _selectedStorageId,
+                          decoration: const InputDecoration(
+                            labelText: 'Filter by Storage',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          items: [
+                            const DropdownMenuItem<int>(
+                              value: null,
+                              child: Text('All Storages'),
+                            ),
+                            ...storages.map(
+                              (storage) => DropdownMenuItem<int>(
+                                value: storage.id,
+                                child: Text(storage.name),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedStorageId = value;
+                            });
+                          },
+                        ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Filters and Search
-                    _buildFiltersSection(storagesAsync),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<models.ItemStatus>(
+                        value: _selectedStatus,
+                        decoration: const InputDecoration(
+                          labelText: 'Filter by Status',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: [
+                          const DropdownMenuItem<models.ItemStatus>(
+                            value: null,
+                            child: Text('All Statuses'),
+                          ),
+                          ...models.ItemStatus.values.map(
+                            (status) => DropdownMenuItem<models.ItemStatus>(
+                              value: status,
+                              child: Text(status.displayName),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedStatus = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Items List
+          Expanded(
+            child: itemsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text('Error: ${error.toString()}'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => ref.refresh(itemNotifierProvider),
+                      child: const Text('Retry'),
+                    ),
                   ],
                 ),
               ),
-            ),
+              data: (items) {
+                final filteredItems = _getFilteredItems(items);
 
-            const SizedBox(height: 16),
-
-            // Items List - Real-time data from StateNotifier
-            Expanded(
-              child: itemsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error, size: 60, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text('Error: $error'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => ref
-                            .read(itemNotifierProvider.notifier)
-                            .refreshItems(),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-                data: (items) {
-                  final filteredItems = _getFilteredItems(items);
-                  return RefreshIndicator(
-                    onRefresh: () =>
-                        ref.read(itemNotifierProvider.notifier).refreshItems(),
-                    child: filteredItems.isEmpty
-                        ? _buildEmptyState()
-                        : _buildItemsList(filteredItems),
+                if (filteredItems.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No items found',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          items.isEmpty
+                              ? 'Add your first item to get started'
+                              : 'Try adjusting your filters',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                        ),
+                      ],
+                    ),
                   );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+                }
 
-  Widget _buildFiltersSection(AsyncValue storagesAsync) {
-    return AppCard(
-      variant: AppCardVariant.outlined,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.filter_list_outlined, color: AppColors.primary),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Filters & Search',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Storage Filter
-          storagesAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-            error: (_, __) => Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, color: AppColors.error),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Text('Error loading storages'),
-                ],
-              ),
-            ),
-            data: (storages) => DropdownButtonFormField<int?>(
-              value: _selectedStorageId,
-              decoration: InputDecoration(
-                labelText: 'Filter by Storage',
-                prefixIcon: Icon(
-                  Icons.storage_outlined,
-                  color: AppColors.textSecondary,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  borderSide: BorderSide(color: AppColors.outline),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  borderSide: BorderSide(color: AppColors.outline),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  borderSide: BorderSide(color: AppColors.primary),
-                ),
-              ),
-              items: [
-                const DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text('All Storages'),
-                ),
-                ...storages.map(
-                  (storage) => DropdownMenuItem<int?>(
-                    value: storage.id,
-                    child: Text(storage.name),
-                  ),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedStorageId = value;
-                });
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredItems.length,
+                  itemBuilder: (context, index) {
+                    final item = filteredItems[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: _getStatusColor(item.status),
+                          child: Icon(
+                            _getStatusIcon(item.status),
+                            color: Colors.white,
+                          ),
+                        ),
+                        title: Text(
+                          item.toolName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text('${item.model} | ${item.productNo}'),
+                            Text('Serial: ${item.serialNo}'),
+                            if (item.remarks != null && item.remarks!.isNotEmpty)
+                              Text(
+                                'Remarks: ${item.remarks}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                          ],
+                        ),
+                        trailing: Chip(
+                          label: Text(
+                            item.status.displayName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white,
+                            ),
+                          ),
+                          backgroundColor: _getStatusColor(item.status),
+                        ),
+                        onTap: () => _showItemDetailsDialog(item),
+                      ),
+                    );
+                  },
+                );
               },
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddItemDialog,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Item'),
+      ),
+    );
+  }
 
-          // Search Bar
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search items by name or description...',
-              prefixIcon: Icon(
-                Icons.search_outlined,
-                color: AppColors.textSecondary,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                borderSide: BorderSide(color: AppColors.outline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                borderSide: BorderSide(color: AppColors.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                borderSide: BorderSide(color: AppColors.primary),
-              ),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Icons.clear, color: AppColors.textSecondary),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _searchQuery = '';
-                        });
-                      },
-                    )
-                  : null,
+  Color _getStatusColor(models.ItemStatus status) {
+    switch (status) {
+      case models.ItemStatus.available:
+        return Colors.green;
+      case models.ItemStatus.borrowed:
+        return Colors.orange;
+      case models.ItemStatus.lost:
+        return Colors.red;
+      case models.ItemStatus.damaged:
+        return Colors.purple;
+    }
+  }
+
+  IconData _getStatusIcon(models.ItemStatus status) {
+    switch (status) {
+      case models.ItemStatus.available:
+        return Icons.check_circle;
+      case models.ItemStatus.borrowed:
+        return Icons.schedule;
+      case models.ItemStatus.lost:
+        return Icons.error;
+      case models.ItemStatus.damaged:
+        return Icons.build;
+    }
+  }
+
+  void _showItemDetailsDialog(models.Item item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(item.toolName),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailRow('Model', item.model),
+            _buildDetailRow('Product No.', item.productNo),
+            _buildDetailRow('Serial No.', item.serialNo),
+            if (item.remarks != null)
+              _buildDetailRow('Remarks', item.remarks!),
+            _buildDetailRow('Year', item.year),
+            _buildDetailRow('Status', item.status.displayName),
+            _buildDetailRow(
+              'Created',
+              '${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}',
             ),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.inventory_2_outlined,
-                        size: 64,
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      _searchQuery.isNotEmpty || _selectedStorageId != null
-                          ? 'No items found'
-                          : 'No items added yet',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      _searchQuery.isNotEmpty || _selectedStorageId != null
-                          ? 'Try adjusting your search criteria or filters'
-                          : 'Start by adding items to your inventory',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    if (_searchQuery.isEmpty && _selectedStorageId == null)
-                      ElevatedButton.icon(
-                        onPressed: () => _showItemDialog(),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add First Item'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.onPrimary,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                            vertical: AppSpacing.md,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildItemsList(List<models.Item> items) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: _buildItemCard(item),
-        );
-      },
-    );
-  }
-
-  Widget _buildItemCard(models.Item item) {
-    final stockLevel = item.totalQuantity > 0
-        ? item.availableQuantity / item.totalQuantity
-        : 0.0;
-    final stockColor = stockLevel > 0.5
-        ? AppColors.success
-        : stockLevel > 0.2
-        ? AppColors.warning
-        : AppColors.error;
-
-    return AppCard(
-      onTap: () => _showItemDialog(item: item),
-      child: Column(
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  Icons.inventory_2_outlined,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    if (item.description != null &&
-                        item.description!.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        item.description!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    _showItemDialog(item: item);
-                  } else if (value == 'delete') {
-                    _confirmDelete(item);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined, color: AppColors.info),
-                        SizedBox(width: AppSpacing.sm),
-                        Text('Edit'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline, color: AppColors.error),
-                        SizedBox(width: AppSpacing.sm),
-                        Text('Delete'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Stock Information
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildStockMetric(
-                    'Total',
-                    '${item.totalQuantity}',
-                    Icons.inventory_outlined,
-                    AppColors.textPrimary,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStockMetric(
-                    'Available',
-                    '${item.availableQuantity}',
-                    Icons.check_circle_outline,
-                    stockColor,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStockMetric(
-                    'Borrowed',
-                    '${item.totalQuantity - item.availableQuantity}',
-                    Icons.schedule_outlined,
-                    AppColors.warning,
-                  ),
-                ),
-              ],
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Additional Info
-          Row(
-            children: [
-              Icon(Icons.access_time, size: 16, color: AppColors.textTertiary),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                'Added ${item.createdAt.toLocal().toString().split(' ')[0]}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textTertiary),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: stockColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
-                ),
-                child: Text(
-                  '${(stockLevel * 100).round()}% Available',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: stockColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          Expanded(
+            child: Text(value),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStockMetric(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-        ),
-      ],
     );
   }
 }

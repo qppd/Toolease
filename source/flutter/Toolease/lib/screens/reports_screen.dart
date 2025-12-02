@@ -99,20 +99,16 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> with WidgetsBindi
         });
       }
 
-      // Calculate inventory statistics
-      final totalQuantity = items.fold(
-        0,
-        (sum, item) => sum + item.totalQuantity,
-      );
-      final availableQuantity = items.fold(
-        0,
-        (sum, item) => sum + item.availableQuantity,
-      );
-      final borrowedQuantity = totalQuantity - availableQuantity;
+      // Calculate inventory statistics for per-unit tracking
+      final totalItems = items.length;
+      final availableItems = items.where((item) => item.status == models.ItemStatus.available).length;
+      final borrowedItems = items.where((item) => item.status == models.ItemStatus.borrowed).length;
+      final damagedItems = items.where((item) => item.status == models.ItemStatus.damaged).length;
+      final lostItems = items.where((item) => item.status == models.ItemStatus.lost).length;
 
-      // Low stock items (< 20% available)
-      final lowStockItems = items
-          .where((item) => item.availableQuantity <= (item.totalQuantity * 0.2))
+      // Items that might need attention (damaged or lost)
+      final itemsNeedingAttention = items
+          .where((item) => item.status == models.ItemStatus.damaged || item.status == models.ItemStatus.lost)
           .toList();
 
       setState(() {
@@ -129,10 +125,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> with WidgetsBindi
           'archivedRecords': archivedRecords,
           'damagedItemRecords': damagedItemRecords,
           'lostItemRecords': lostItemRecords,
-          'totalQuantity': totalQuantity,
-          'availableQuantity': availableQuantity,
-          'borrowedQuantity': borrowedQuantity,
-          'lowStockItems': lowStockItems,
+          'totalItems': totalItems,
+          'availableItems': availableItems,
+          'borrowedItems': borrowedItems,
+          'damagedItems': damagedItems,
+          'lostItems': lostItems,
+          'itemsNeedingAttention': itemsNeedingAttention,
           'generatedAt': DateTime.now(),
         };
       });
@@ -259,9 +257,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> with WidgetsBindi
           ),
           pw.Text('Total Items: ${items.length}'),
           pw.Text('Total Storages: ${storages.length}'),
-          pw.Text('Total Quantity: ${_reportData['totalQuantity']}'),
-          pw.Text('Available Quantity: ${_reportData['availableQuantity']}'),
-          pw.Text('Borrowed Quantity: ${_reportData['borrowedQuantity']}'),
+          pw.Text('Total Items: ${_reportData['totalItems']}'),
+          pw.Text('Available Items: ${_reportData['availableItems']}'),
+          pw.Text('Borrowed Items: ${_reportData['borrowedItems']}'),
+          pw.Text('Damaged Items: ${_reportData['damagedItems']}'),
+          pw.Text('Lost Items: ${_reportData['lostItems']}'),
           pw.SizedBox(height: 20),
 
           pw.Text(
@@ -288,7 +288,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> with WidgetsBindi
                     (item) => pw.Padding(
                       padding: const pw.EdgeInsets.only(left: 20),
                       child: pw.Text(
-                        '• ${item.name}: ${item.availableQuantity}/${item.totalQuantity} available',
+                        '• ${item.toolName} (${item.serialNo}): ${item.status.displayName}',
                       ),
                     ),
                   ),
@@ -300,12 +300,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> with WidgetsBindi
           if ((_reportData['lowStockItems'] as List).isNotEmpty) ...[
             pw.SizedBox(height: 20),
             pw.Text(
-              'Low Stock Items',
+              'Items Needing Attention',
               style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
-            ...(_reportData['lowStockItems'] as List<models.Item>).map(
+            ...(_reportData['itemsNeedingAttention'] as List<models.Item>).map(
               (item) => pw.Text(
-                '• ${item.name}: ${item.availableQuantity}/${item.totalQuantity} available (${item.totalQuantity > 0 ? (item.availableQuantity / item.totalQuantity * 100).round() : 0}%)',
+                '• ${item.toolName} (${item.serialNo}): ${item.status.displayName}',
               ),
             ),
           ],
@@ -518,13 +518,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> with WidgetsBindi
             'Inventory Status',
             style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
           ),
-          pw.Text('Total Items: ${_reportData['totalQuantity'] ?? 0}'),
-          pw.Text('Available: ${_reportData['availableQuantity'] ?? 0}'),
+          pw.Text('Total Items: ${_reportData['totalItems'] ?? 0}'),
+          pw.Text('Available: ${_reportData['availableItems'] ?? 0}'),
+          pw.Text('Currently Borrowed: ${_reportData['borrowedItems'] ?? 0}'),
+          pw.Text('Damaged: ${_reportData['damagedItems'] ?? 0}'),
+          pw.Text('Lost: ${_reportData['lostItems'] ?? 0}'),
           pw.Text(
-            'Currently Borrowed: ${_reportData['borrowedQuantity'] ?? 0}',
-          ),
-          pw.Text(
-            'Utilization Rate: ${(_reportData['totalQuantity'] ?? 0) > 0 ? ((_reportData['borrowedQuantity'] ?? 0) / (_reportData['totalQuantity'] ?? 1) * 100).round() : 0}%',
+            'Utilization Rate: ${(_reportData['totalItems'] ?? 0) > 0 ? ((_reportData['borrowedItems'] ?? 0) / (_reportData['totalItems'] ?? 1) * 100).round() : 0}%',
           ),
           pw.SizedBox(height: 20),
 
@@ -534,19 +534,19 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> with WidgetsBindi
               style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
             pw.Text(
-              'Low Stock Items: ${(_reportData['lowStockItems'] as List).length}',
+              'Items Needing Attention: ${(_reportData['itemsNeedingAttention'] as List).length}',
               style: pw.TextStyle(color: PdfColors.red),
             ),
-            ...(_reportData['lowStockItems'] as List<models.Item>)
+            ...(_reportData['itemsNeedingAttention'] as List<models.Item>)
                 .take(5)
                 .map(
                   (item) => pw.Text(
-                    '• ${item.name}: ${item.availableQuantity}/${item.totalQuantity} available',
+                    '• ${item.toolName} (${item.serialNo}): ${item.status.displayName}',
                   ),
                 ),
-            if ((_reportData['lowStockItems'] as List).length > 5)
+            if ((_reportData['itemsNeedingAttention'] as List).length > 5)
               pw.Text(
-                '... and ${(_reportData['lowStockItems'] as List).length - 5} more items',
+                '... and ${(_reportData['itemsNeedingAttention'] as List).length - 5} more items',
               ),
           ],
         ],
