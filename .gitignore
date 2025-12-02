@@ -2,6 +2,9 @@
 *.stl
 *.gcode
 
+# Ignore Autodesk Fusion 360 files
+*.f3d
+
 # Other common ignores
 *.log
 *.tmp
