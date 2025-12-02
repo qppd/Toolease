@@ -86,18 +86,68 @@ ToolEase is a complete IoT solution for managing tool lending, inventory, and as
 
 ---
 
-## Wiring Diagram
 
-```
-MFRC522    ESP32
-SDA(SS) -> GPIO5
-SCK     -> GPIO18
-MOSI    -> GPIO23
-MISO    -> GPIO19
-RST     -> GPIO21
-3.3V    -> 3.3V
-GND     -> GND
-```
+## Physical Assembly & Views
+
+ToolEase is designed for robust, real-world deployment. Below are detailed renders and diagrams to guide you through the assembly, wiring, and enclosure design. Each view and diagram is provided to ensure clarity for both hardware assembly and troubleshooting.
+
+### Full Device Views
+
+#### Complete Assembly (All Angles)
+
+<p align="center">
+  <img src="models/Toolease_Full_View.png" alt="Toolease Full View" width="500"/>
+</p>
+
+This render shows the fully assembled ToolEase device, including the ESP32, RFID module, and all enclosure parts. Use this as a reference for the final look and for verifying that all components are properly housed.
+
+#### Front View
+<p align="center">
+  <img src="models/Toolease_Full_Front_View.png" alt="Toolease Front View" width="400"/>
+</p>
+The front view highlights the RFID scan area, user interface, and any status indicators. This is the main interaction side for users.
+
+#### Back View
+<p align="center">
+  <img src="models/Toolease_Full_Back_View.png" alt="Toolease Back View" width="400"/>
+</p>
+The back view shows cable management, mounting options, and access to the ESP32 board for maintenance.
+
+#### Side View
+<p align="center">
+  <img src="models/Toolease_Full_Side_View.png" alt="Toolease Side View" width="400"/>
+</p>
+The side profile demonstrates the device’s thickness, bracket placement, and ventilation if present.
+
+#### Top View
+<p align="center">
+  <img src="models/Toolease_Full_Top_View.png" alt="Toolease Top View" width="400"/>
+</p>
+The top view is useful for understanding the layout of ports, buttons, and the RFID antenna’s position.
+
+### 3D Printed Parts & Covers
+
+- **Board Case:** ![Board Case](models/Toolease_Board_Case.png)
+- **Bracket:** ![Bracket](models/Toolease_Bracket.png)
+- **Case Cover:** ![Case Cover](models/Toolease_Case_Cover.png)
+- **Tablet Cover:** ![Tablet Cover](models/Toolease_Tablet_Cover.png)
+- **Port Cover:** ![Port Cover](models/Toolease_Port_Cover.png)
+- **All Parts Joined:** ![All Parts](models/Toolease_Rfid_Casing_All_Parts_Joined.png)
+
+Each part is designed for easy 3D printing and assembly. The covers and brackets ensure protection, stability, and a professional finish for the device.
+
+### Wiring Diagram & Fritzing
+
+#### Visual Wiring Diagram
+<p align="center">
+  <img src="wiring/Wiring.png" alt="Wiring Diagram" width="600"/>
+</p>
+This diagram provides a clear, color-coded map of all connections between the ESP32 and MFRC522 RFID module. Double-check your wiring against this image before powering on.
+
+#### Fritzing Source File
+- [Download Wiring.fzz](wiring/Wiring.fzz)
+
+The Fritzing file allows you to view, edit, or print the wiring diagram using the Fritzing app. This is ideal for customizing the hardware layout or troubleshooting.
 
 ---
 
