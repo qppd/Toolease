@@ -76,13 +76,62 @@ ToolEase is a complete IoT solution for managing tool lending, inventory, and as
 
 ---
 
-## Hardware Requirements
 
-- **ESP32 Dev Board** (WROOM-32 or similar)
-- **MFRC522 RFID Module** (SPI interface)
-- **RFID Tags/Cards** (MIFARE Classic 1K/4K, NTAG)
-- **Tablet/Android Device** (with WiFi, running Flutter app)
-- **Power Supply** (USB or battery, 500mA+)
+## Bill of Materials (BOM) & Procurement Sources
+
+Below is a comprehensive list of all components required to build the ToolEase system, grouped by category. Each item includes recommended sources and price notes. For the latest prices, search the listed stores (Lazada, Makerlab Electronics, TechLife, or your local hardware store).
+
+### 1. Electronics (Makerlab Electronics – Lazada or Direct Store)
+
+| Item | Quantity | Source | Price (₱, est.) | Notes |
+|------|----------|--------|-----------------|-------|
+| ESP32 30-pin module (ESP32-DEVKIT V1) | 1 | Makerlab Electronics (Lazada) | ~₱350 | WiFi microcontroller board |
+| RFID-RC522 module | 1 | Makerlab Electronics (Lazada) | ~₱120 | RFID reader (SPI) |
+| RFID Tags | 15 | Makerlab Electronics (Lazada) | ~₱300 | MIFARE Classic 1K/4K, cards or keyfobs |
+| 24 AWG hookup wires | 1 bundle | Makerlab Electronics (Lazada) | ~₱80 | For all connections |
+| JST-XH 4-pin connectors | 1 pack | Makerlab Electronics (Lazada) | ~₱40 | For modular wiring |
+| JST-XH 3-pin connectors | 1 pack | Makerlab Electronics (Lazada) | ~₱40 | For modular wiring |
+
+### 2. Display
+
+
+| Item | Quantity | Source | Price (₱, est.) | Notes |
+|------|----------|--------|-----------------|-------|
+| 8-inch tablet – TechLife Lite 8" (TLPADL03) | 1 | TechLife Store / Lazada | ~₱4,999 | Main user interface |
+
+### 3. Power System
+
+| Item | Quantity | Source | Price (₱, est.) | Notes |
+|------|----------|--------|-----------------|-------|
+| 220V to 5V 3A power supply | 1 | Makerlab Electronics (Lazada) | ~₱180 | For stable power |
+
+### 4. Enclosure / Physical Build (Hardware Store)
+
+| Item | Quantity | Source | Price (₱, est.) | Notes |
+|------|----------|--------|-----------------|-------|
+| 1/2-inch Nebraska plywood (full sheet) | 1 | Local hardware store | ₱980 | For enclosure/cabinet |
+| Nails | 1 pack | Local hardware store | ₱20 | For assembly |
+| Tek screws | 1 pack | Local hardware store | ₱30 | For mounting |
+
+---
+
+### Procurement Notes
+
+- **All electronics** (ESP32, RFID module, tags, wires, JST-XH connectors, power supply) are best sourced from **Makerlab Electronics** via Lazada or their direct store for quality and support.
+- **Display/tablet** is available from the official TechLife store or Lazada. Always check for the latest model and price.
+- **Enclosure materials** (plywood, nails, screws) are available at any local hardware store. Prices may vary by region.
+
+### Total Estimated Cost Breakdown
+
+| Category | Subtotal (₱, est.) |
+|----------|-------------------|
+| Electronics | ₱930 |
+| Display | ₱4,999 |
+| Power System | ₱180 |
+| Enclosure | ₱1,030 |
+| **Total** | **₱7,139** |
+
+*Prices are estimates as of December 2025. Always check Lazada, Makerlab, and TechLife for current pricing and availability.*
 
 ---
 
