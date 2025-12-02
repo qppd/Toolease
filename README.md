@@ -1,7 +1,9 @@
 
-# Toolease
 
-A comprehensive RFID-based tool leasing and inventory management system combining Flutter mobile application with ESP32 microcontroller for real-time tool tracking and management. Designed for educational institutions, workshops, and industrial environments requiring efficient equipment borrowing and inventory control.
+
+# ToolEase
+
+**A modern, open-source RFID-based tool leasing and inventory management system for educational, industrial, and makerspace environments.**
 
 ---
 
@@ -10,14 +12,13 @@ A comprehensive RFID-based tool leasing and inventory management system combinin
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [System Architecture](#system-architecture)
-- [Hardware Components](#hardware-components)
-- [Software Components](#software-components)
-- [Database Schema](#database-schema)
+- [Hardware Requirements](#hardware-requirements)
+- [Wiring Diagram](#wiring-diagram)
+- [Software Dependencies](#software-dependencies)
 - [Installation & Setup](#installation--setup)
 - [Configuration](#configuration)
 - [Operation Guide](#operation-guide)
 - [API & Communication](#api--communication)
-- [Features in Detail](#features-in-detail)
 - [Testing & Validation](#testing--validation)
 - [Troubleshooting](#troubleshooting)
 - [Project Structure](#project-structure)
@@ -28,27 +29,385 @@ A comprehensive RFID-based tool leasing and inventory management system combinin
 
 ---
 
+
+
+
 ## Overview
 
-Toolease is an integrated IoT solution for tool leasing and inventory management that combines:
+ToolEase is a complete IoT solution for managing tool lending, inventory, and asset tracking. It combines a robust Flutter mobile app with an ESP32-based RFID hardware interface, enabling real-time, per-unit tracking of tools and equipment. Designed for schools, universities, workshops, and industrial settings, ToolEase streamlines the process of borrowing, returning, and maintaining tools, ensuring accountability and reducing loss.
 
-- **Flutter Mobile App**: User-friendly interface for students and administrators
-- **ESP32 Microcontroller**: Hardware interface for RFID scanning
-- **Real-time WebSocket Communication**: Seamless data exchange between mobile app and hardware
-- **SQLite Database**: Local data persistence with Drift ORM
-- **Comprehensive Reporting**: PDF generation for inventory and transaction reports
-
-The system enables educational institutions and workshops to efficiently manage tool borrowing, track inventory in real-time, and maintain detailed records of equipment usage and condition.
+**Why ToolEase?**
+- Eliminate manual logbooks and spreadsheets
+- Prevent tool loss and unauthorized borrowing
+- Gain real-time visibility into inventory and usage
+- Simplify reporting and compliance
 
 ---
 
 ## Key Features
 
-### Core Functionality
-- **Student Registration & Management**: Register students with ID, name, year level, and section
-- **Storage Organization**: Create and manage multiple storage locations for tools
-- **Item Inventory Management**: Add, edit, and organize tools with quantity tracking
-- **RFID Tag Assignment**: Assign RFID tags to individual item units for automated tracking
+- **Per-Unit RFID Tracking:** Every tool is uniquely tagged and tracked
+- **Student & User Management:** Register, search, and manage borrowers
+- **Multi-Storage Support:** Organize tools by location or cabinet
+- **Borrow/Return Workflow:** Scan to borrow, scan to return, with condition assessment
+- **Admin Dashboard:** Real-time stats, PDF reports, and analytics
+- **Kiosk Mode:** Secure, tablet-optimized interface for public use
+- **Offline Operation:** Local database ensures reliability without internet
+- **Auto-Reconnect:** Robust WiFi/WebSocket connection with status feedback
+- **Security:** Biometric/PIN admin access, audit logs, and session management
+
+---
+
+## System Architecture
+
+```
+┌───────────────┐    WebSocket    ┌───────────────┐
+│  Flutter App  │◄──────────────►│    ESP32      │
+│   (Tablet)    │                │  (RFID HW)    │
+│               │                │               │
+│ • UI/UX       │                │ • MFRC522     │
+│ • SQLite DB   │                │ • WiFi AP     │
+│ • WebSocket   │                │ • AsyncServer │
+└───────────────┘                └───────────────┘
+     │                                 │
+     ▼                                 ▼
+   Students, Admins                  RFID Tags
+```
+
+---
+
+## Hardware Requirements
+
+- **ESP32 Dev Board** (WROOM-32 or similar)
+- **MFRC522 RFID Module** (SPI interface)
+- **RFID Tags/Cards** (MIFARE Classic 1K/4K, NTAG)
+- **Tablet/Android Device** (with WiFi, running Flutter app)
+- **Power Supply** (USB or battery, 500mA+)
+
+---
+
+## Wiring Diagram
+
+```
+MFRC522    ESP32
+SDA(SS) -> GPIO5
+SCK     -> GPIO18
+MOSI    -> GPIO23
+MISO    -> GPIO19
+RST     -> GPIO21
+3.3V    -> 3.3V
+GND     -> GND
+```
+
+---
+
+## Software Dependencies
+
+### Flutter App
+- Flutter SDK 3.8+
+- Dart SDK 3.0+
+- Riverpod, Drift ORM, Material 3, PDF, Kiosk Mode, Local Auth, Permission Handler
+
+### ESP32 Firmware
+- Arduino IDE 1.8+
+- ESP32 Arduino Core v2.0.14
+- ESPAsyncWebServer, AsyncTCP, EasyMFRC522
+
+---
+
+## Installation & Setup
+
+### ESP32 Setup
+1. Open Arduino IDE
+2. Load `source/esp32/Toolease/Toolease.ino`
+3. Select **ESP32 Dev Module** (Board Manager: v2.0.14 recommended)
+4. Install libraries: ESPAsyncWebServer, AsyncTCP, EasyMFRC522
+5. Upload firmware
+6. Open Serial Monitor (115200 baud)
+7. Confirm: "Access Point started" and "IP Address: 192.168.4.1"
+
+### Flutter App Setup
+1. Clone repository: `git clone https://github.com/qppd/Toolease.git`
+2. `cd Toolease/source/flutter/Toolease`
+3. Install dependencies: `flutter pub get`
+4. Build and run: `flutter run` or `flutter build apk --release`
+5. Install APK on tablet
+
+### Connect Tablet to ESP32 WiFi
+1. Settings → WiFi → Connect to `ToolEase_RFID` (password: `toolease123`)
+2. Ignore "No internet" warning, turn OFF mobile data
+3. Open ToolEase app, wait for green WiFi icon
+
+---
+
+## Configuration
+
+### Flutter App
+- Kiosk mode, feature toggles, biometric/PIN admin access, WebSocket server settings
+
+### ESP32
+- WiFi credentials, RFID pin assignments, WebSocket port (default 81), debug level
+
+### Database
+- Auto-migrates on first run; settings and admin credentials configurable in-app
+
+---
+
+## Operation Guide
+
+### For Students
+1. Register via app, enter details
+2. Borrow: select item, scan RFID tag
+3. Return: select item, scan RFID, assess condition
+
+### For Admins
+1. Authenticate, manage students/items/storages
+2. Assign RFID tags, generate reports, configure settings
+
+### RFID Workflow
+1. Assign tag: admin selects item, places tag on reader, app writes data
+2. Borrow: student scans tag, app records transaction
+3. Return: scan tag, record condition
+
+---
+
+## API & Communication
+
+### WebSocket Protocol
+- **ESP32 → App:** `{ "action": "rfid_scan", "uid": "A1:B2:C3:D4:E5:F6" }`
+- **App → ESP32:** `{ "action": "write_tag", "data": "item_id:unit_id" }`
+
+### Database API
+- Full CRUD for all entities, atomic transactions, real-time queries, advanced search/filter
+
+### Serial Commands (ESP32)
+- `test`, `scan <uid>`, `help`
+
+---
+
+## Testing & Validation
+
+- Follow Quick Start and WiFi Setup
+- Upload ESP32 firmware, verify AP
+- Build/install app, connect to WiFi
+- Test RFID scan, borrow/return, admin dashboard
+- Simulate disconnects, test auto-reconnect
+- Use Serial Monitor and Flutter DevTools for debugging
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| No WiFi network | ESP32 powered on? Serial Monitor shows AP? |
+| Can't connect WiFi | Correct password? Mobile data OFF? |
+| Red WiFi icon | Wait 3s for auto-reconnect. Check Serial Monitor. |
+| Scan timeout | Green WiFi icon? Hold tag close to reader? |
+| Connection drops | Move closer to ESP32. Check for interference. |
+
+See full section above for detailed troubleshooting.
+
+---
+
+## Project Structure
+
+```
+Toolease/
+├── LICENSE
+├── README.md
+├── models/           # 3D printable parts
+├── source/
+│   ├── esp32/
+│   │   └── Toolease/ (firmware)
+│   └── flutter/
+│       └── Toolease/ (Flutter app)
+└── wiring/           # Hardware diagrams
+```
+
+---
+
+## Future Enhancements
+
+- Cloud sync for multi-device
+- Barcode/QR code support
+- Advanced analytics and reporting
+- Maintenance scheduling
+- Mobile app for students
+- Multi-location, centralized management
+- AI-powered predictive maintenance
+
+---
+
+## Contributing
+
+We welcome contributions! Please fork, create a feature branch, commit, and open a pull request. See code standards and dev setup in the repo.
+
+---
+
+## Support & Contact
+
+- **Developer:** Quezon Province Provincial Developer
+- **Email:** quezon.province.pd@gmail.com
+- **Portfolio:** [sajed-mendoza.onrender.com](https://sajed-mendoza.onrender.com)
+- **GitHub:** [qppd](https://github.com/qppd)
+- **Facebook:** [qppd.dev](https://facebook.com/qppd.dev)
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
+
+
+## 🚀 Quick Start
+
+### ESP32 Setup
+1. Open Arduino IDE
+2. Load `source/esp32/Toolease/Toolease.ino`
+3. Select **ESP32 Dev Module** (Board Manager: v2.0.14 recommended)
+4. Install libraries: **ESPAsyncWebServer**, **AsyncTCP**, **EasyMFRC522**
+5. Upload firmware
+6. Open Serial Monitor (115200 baud)
+7. You should see:
+   - `Access Point started`
+   - `IP Address: 192.168.4.1`
+   - `WebSocket server started on port 80 at /ws`
+
+### Tablet Setup
+1. Connect to WiFi: `ToolEase_RFID` (password: `toolease123`)
+2. Ignore "No internet" warning
+3. Turn OFF mobile data
+4. Open ToolEase app
+5. Wait for **green WiFi icon**
+
+### Usage
+- **Green WiFi icon** = Connected
+- **Red WiFi-off icon** = Not connected
+- **RFID scanning** = Hold tag near RC522 for 1-2 seconds
+
+### WiFi/WebSocket Details
+```
+SSID: ToolEase_RFID
+Password: toolease123
+IP: 192.168.4.1
+WebSocket URL: ws://192.168.4.1/ws
+```
+
+---
+
+
+## WiFi & WebSocket Setup
+
+- ESP32 creates a WiFi Access Point (`ToolEase_RFID`)
+- Tablet connects to ESP32 WiFi
+- Communication is via WebSocket (`ws://192.168.4.1/ws`)
+- No Bluetooth required
+- Auto-reconnect and error handling built-in
+
+**Troubleshooting:**
+| Problem | Solution |
+|---------|----------|
+| No WiFi network | Restart ESP32, check Serial Monitor |
+| Can't connect | Double-check password, turn off mobile data |
+| Red WiFi icon | Wait 3 seconds for auto-reconnect |
+| Scan timeout | Ensure green WiFi icon before scanning |
+| Still not working? | Re-upload firmware, check library versions |
+
+---
+
+## System Features
+
+- **Per-Unit RFID Tracking**: Every tool has a unique RFID tag (Serial No.)
+- **Student Registration & Management**: Register students with ID, name, year, section
+- **Storage Organization**: Manage multiple storage locations
+- **Item Inventory**: Add/edit tools, assign RFID, track status (available, borrowed, lost, damaged)
+- **Borrow/Return Workflow**: Scan to borrow, scan to return, condition tracking
+- **Admin Panel**: Secure PIN/biometric access, real-time stats, PDF reports
+- **Kiosk Mode**: Tablet-optimized, restricted navigation
+- **Auto-Reconnect**: WiFi/WebSocket auto-reconnect for reliability
+
+---
+
+## Database & Code Structure
+
+### Database
+- **SQLite with Drift ORM**
+- Per-unit item tracking (no more quantity fields)
+- Borrow/return records linked to unique Serial No.
+
+### Code Structure
+- `lib/` (Flutter app)
+   - `core/`, `database/`, `models/`, `providers/`, `screens/`, `services/`, `shared/`, `utils/`
+- `source/esp32/Toolease/` (ESP32 firmware)
+   - `Toolease.ino`, `Websocket_Config.cpp/.h`, `Rfid_Config.cpp/.h`
+
+### ESP32 Pinout
+```
+ESP32       RC522
+GPIO 5   -> SDA (SS)
+GPIO 18  -> SCK
+GPIO 23  -> MOSI
+GPIO 19  -> MISO
+GPIO 21  -> RST
+3.3V     -> 3.3V
+GND      -> GND
+```
+
+---
+
+## Deployment & Testing
+
+### Pre-Deployment Checklist
+- [ ] ESP32 firmware uploaded, Serial Monitor shows correct logs
+- [ ] Tablet connects to `ToolEase_RFID`, mobile data OFF
+- [ ] ToolEase app installed, green WiFi icon appears
+- [ ] RFID scan works for borrow/return
+- [ ] Admin panel accessible, reports generate
+
+### Build & Install
+- `flutter pub get`
+- `flutter run` or `flutter build apk --release`
+- Install APK on tablet
+
+### Testing
+- Borrow/return workflow
+- Student registration
+- Admin dashboard
+- Error handling (disconnect WiFi, scan timeout)
+
+---
+
+## Troubleshooting
+
+**Common Issues:**
+- ESP32 not creating WiFi: Check power, re-upload firmware
+- Tablet won’t connect: Double-check password, mobile data OFF
+- App not connecting: Confirm WebSocket URL is `ws://192.168.4.1/ws`
+- Scan timeout: Ensure green WiFi icon, hold tag for 1-2 seconds
+- Still stuck? Downgrade ESP32 core to 2.0.14, reinstall libraries
+
+**Debug Tools:**
+- Serial Monitor (ESP32)
+- Flutter DevTools
+- Network tools (ping, WebSocket test apps)
+
+---
+
+## Migration & Changelog
+
+- Bluetooth code and dependencies **fully removed**
+- ESP32 now uses **ESPAsyncWebServer** + **AsyncTCP** for WebSocket
+- WebSocket URL changed to `ws://192.168.4.1/ws` (port 80)
+- All Flutter code uses WebSocket only
+- Per-unit RFID tracking, no more quantity fields
+- All documentation merged into this README
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
 - **Borrowing System**: Multi-storage, multi-item borrowing with real-time availability checking
 - **Return Processing**: Condition-based return tracking (good, damaged, lost) for each item unit
 - **Real-time Synchronization**: WebSocket-based communication between mobile app and RFID hardware
@@ -114,10 +473,10 @@ The system enables educational institutions and workshops to efficiently manage 
 
 ## Hardware Components
 
+
 ### ESP32 Development Board
 - **Microcontroller**: ESP32-WROOM-32
 - **WiFi**: 802.11 b/g/n (2.4GHz)
-- **Bluetooth**: v4.2 BR/EDR and BLE
 - **GPIO Pins**: 36 total (configurable)
 - **Power**: 5V USB or 3.3V regulated
 
@@ -144,13 +503,14 @@ The system enables educational institutions and workshops to efficiently manage 
 - **UI Components**: Material Design 3
 - **Platform Support**: Android, iOS, Windows
 
+
 ### ESP32 Firmware
 - **IDE**: Arduino IDE 1.8.0+
 - **Core**: ESP32 Arduino Core
 - **Libraries**:
-  - EasyMFRC522 (RFID handling)
-  - WebSockets (communication)
-  - WiFi (networking)
+   - EasyMFRC522 (RFID handling)
+   - ArduinoWebsockets (WebSocket communication)
+   - WiFi (networking)
 
 ### Key Dependencies
 ```yaml
@@ -253,6 +613,9 @@ CREATE TABLE borrow_item_conditions (
 
 ## Installation & Setup
 
+
+## Installation & Setup (WiFi)
+
 ### Prerequisites
 - **Flutter SDK**: 3.8.1 or higher
 - **Dart SDK**: 3.0.0 or higher
@@ -260,43 +623,49 @@ CREATE TABLE borrow_item_conditions (
 - **Arduino IDE**: 1.8.0+ with ESP32 support
 - **Git**: Version control system
 
-### Flutter App Setup
+### ESP32 Setup
+1. **Configure WiFi Credentials**
+   - Open `source/esp32/Toolease/Toolease.ino` and set:
+     ```cpp
+     const char* ssid = "ToolEase_RFID";
+     const char* password = "toolease123";
+     ```
+2. **Upload Firmware**
+   - Open Arduino IDE
+   - Connect ESP32 via USB
+   - Select: Tools > Board > ESP32 Dev Module
+   - Select correct Port
+   - Click Upload
+   - Open Serial Monitor (115200 baud)
+   - Confirm: "Access Point started" and "IP Address: 192.168.4.1"
 
-1. **Clone Repository**:
+### Flutter App Setup
+1. **Clone Repository**
    ```bash
    git clone https://github.com/qppd/Toolease.git
    cd Toolease/source/flutter/Toolease
    ```
-
-2. **Install Dependencies**:
+2. **Install Dependencies**
    ```bash
    flutter pub get
    ```
-
-3. **Generate Database Code**:
-   ```bash
-   flutter pub run build_runner build
-   ```
-
-4. **Configure Launcher Icons** (Optional):
-   ```bash
-   flutter pub run flutter_launcher_icons
-   ```
-
-5. **Build and Run**:
+3. **Build and Run**
    ```bash
    flutter run
    ```
 
-### ESP32 Setup
+### Connect Tablet to ESP32 WiFi
+1. Go to Settings > WiFi
+2. Connect to: ToolEase_RFID (password: toolease123)
+3. Ignore "No internet" warning
+4. Make sure Mobile Data is OFF
 
-1. **Install Arduino IDE** and ESP32 Board Support
-2. **Install Libraries**:
-   - EasyMFRC522 by pablo-sampaio
-   - WebSockets by Markus Sattler
-3. **Open Project**: `source/esp32/Toolease/Toolease.ino`
-4. **Configure Pins**: Adjust RFID pin assignments if needed
-5. **Upload Firmware**: Select ESP32 board and upload
+### Test RFID Scanning
+1. Open ToolEase app
+2. Wait for green WiFi icon
+3. Try borrowing or registering a student and scan an RFID tag
+
+---
 
 ### Hardware Assembly
 
@@ -341,56 +710,27 @@ The app automatically creates and migrates the database on first run. Default se
 
 ## Operation Guide
 
+
+## Operation Guide (WiFi)
+
 ### For Students
-
-1. **Registration**:
-   - Tap "Register Student"
-   - Enter student ID, name, year level, section
-   - Submit registration
-
-2. **Borrowing Items**:
-   - Tap "Borrow Items"
-   - Enter student ID
-   - Select storage locations
-   - Choose items and quantities
-   - Confirm borrowing
-
-3. **Returning Items**:
-   - Tap "Return Items"
-   - Enter student ID
-   - Select borrowed items
-   - Assess condition of each item
-   - Confirm return
+1. **Registration**: Register via app, enter details, submit.
+2. **Borrowing**: Select items, scan RFID tag, confirm.
+3. **Returning**: Select borrowed items, scan RFID tag, assess condition, confirm.
 
 ### For Administrators
-
-1. **Access Admin Panel**:
-   - Tap "Admin Panel" from home screen
-   - Authenticate with biometrics or PIN
-
-2. **Manage System**:
-   - View real-time statistics
-   - Manage students, items, storages
-   - Assign RFID tags to items
-   - Generate reports
-   - Configure system settings
+1. **Admin Panel**: Authenticate, manage students/items/storages, assign tags, generate reports, configure settings.
 
 ### RFID Workflow
+1. **Tag Assignment**: Admin selects item, places RFID tag near reader, app writes data.
+2. **Borrowing**: Student selects items, scans RFID tag, transaction recorded.
+3. **Returns**: Student returns items, RFID scan verifies, condition recorded.
 
-1. **Tag Assignment**:
-   - Admin selects item unit
-   - Places RFID tag near reader
-   - App writes item data to tag
-
-2. **Borrowing**:
-   - Student selects items in app
-   - Scans RFID tag to confirm
-   - Transaction recorded
-
-3. **Returns**:
-   - Student returns items
-   - RFID scan verifies return
-   - Condition assessment recorded
+### WiFi/WebSocket Connection
+- ESP32 creates WiFi AP: ToolEase_RFID (password: toolease123)
+- Tablet connects to WiFi
+- App connects to ESP32 via WebSocket (port 81)
+- Green WiFi icon = connected; red = not connected
 
 ---
 
@@ -480,26 +820,22 @@ help          - Display available commands
 
 ---
 
+
 ## Testing & Validation
 
-### Unit Testing
-```bash
-flutter test
-```
+### Pre-Deployment Checklist
+- [ ] Read Quick Start and WiFi Setup sections
+- [ ] Upload ESP32 firmware, verify "Access Point started"
+- [ ] Build and install Flutter app, connect to WiFi
+- [ ] Verify green WiFi icon in app
+- [ ] Test RFID scanning (borrow, return, manage items)
+- [ ] Walk around with tablet, verify connection stability
+- [ ] Try disconnecting/reconnecting WiFi, app should auto-reconnect
+- [ ] Test error handling (turn off ESP32, disconnect WiFi, scan timeout)
+- [ ] Test with multiple tablets if needed
+- [ ] Review documentation and troubleshooting
 
-### Integration Testing
-- **RFID Communication**: Test tag reading/writing
-- **WebSocket Connection**: Validate real-time messaging
-- **Database Operations**: Verify data persistence
-- **UI Workflows**: End-to-end user journey testing
-
-### Hardware Testing
-- **RFID Range**: Test reading distance and reliability
-- **Power Consumption**: Monitor battery life
-- **Network Stability**: Test WiFi connection reliability
-- **Concurrent Users**: Multi-device simultaneous operation
-
-### Validation Checklist
+### Functional Testing
 - [ ] Student registration and lookup
 - [ ] Item creation and RFID assignment
 - [ ] Borrowing workflow completion
@@ -513,33 +849,94 @@ flutter test
 
 ## Troubleshooting
 
-### Common Issues
 
-#### RFID Problems
-- **No Tag Detected**: Check wiring, power, and tag type
-- **Read Errors**: Clean tag surface, check antenna alignment
-- **Write Failures**: Ensure tag is MIFARE Classic format
+## Troubleshooting (WiFi)
 
-#### Network Issues
-- **WebSocket Disconnection**: Check WiFi signal strength
-- **Connection Refused**: Verify ESP32 IP and port
-- **Slow Response**: Check network congestion
+### ESP32 Not Creating WiFi Network
+**Problem:** Can't find "ToolEase_RFID" network on tablet
+**Solutions:**
+- Check ESP32 is powered on and Serial Monitor shows "Access Point started"
+- Try restarting the ESP32 (unplug and plug back in)
+- Make sure WiFi credentials in code match (case-sensitive)
+- Some ESP32 boards need external antenna for better WiFi range
 
-#### App Issues
-- **Database Errors**: Clear app data and restart
-- **UI Freezing**: Check device resources and restart
-- **Permission Denied**: Grant required permissions
+### Tablet Won't Connect to WiFi
+**Problem:** "Authentication error" or "Failed to connect"
+**Solutions:**
+- Double-check password is exactly: `toolease123`
+- Forget the network and reconnect
+- Restart tablet WiFi
+- Move closer to ESP32 (within 5-10 meters)
 
-#### Hardware Issues
-- **ESP32 Not Responding**: Check power supply and reset
-- **MFRC522 Not Working**: Verify SPI connections
-- **WiFi AP Not Visible**: Check antenna and power
+### App Shows "Not Connected"
+**Problem:** Red WiFi-off icon even though WiFi is connected
+**Solutions:**
+1. **Check IP address:** ESP32 should be at `192.168.4.1`
+2. **Verify WebSocket port:** Should be port `81`
+3. **Wait a few seconds:** Auto-reconnect may be in progress
+4. **Check Serial Monitor:** Should show "[WS] Client connecting..." when app connects
+5. **Restart app:** Force close and reopen ToolEase
+6. **Check firewall:** Some tablets may block local connections
+
+### RFID Scan Times Out
+**Problem:** "No RFID tag detected" even after scanning
+**Solutions:**
+- Check WebSocket connection (green WiFi icon)
+- Verify RFID tag is registered in system
+- Hold tag closer to RC522 reader
+- Check Serial Monitor for RFID scan messages
+- Try scanning slowly (1-2 seconds hold time)
+
+### Connection Keeps Dropping
+**Problem:** WiFi icon changes from green to red frequently
+**Solutions:**
+- Move tablet closer to ESP32
+- Disable tablet battery optimization for ToolEase app
+- Turn off **Mobile Data** completely
+- Check for WiFi interference (microwaves, other 2.4GHz devices)
+- Use external antenna on ESP32 if available
+
+### Common Issues - Quick Reference
+| Issue | Check This |
+|-------|------------|
+| No WiFi network | ESP32 powered on? Serial Monitor shows "Access Point started"? |
+| Can't connect WiFi | Correct password (toolease123)? Mobile data OFF? |
+| Red WiFi icon | Wait 3 seconds for auto-reconnect. Check Serial Monitor. |
+| Scan timeout | Green WiFi icon first? Hold tag close to reader? |
+| Connection drops | Move closer to ESP32. Check for interference. |
 
 ### Debug Tools
 - **Serial Monitor**: ESP32 debugging output
 - **Flutter DevTools**: App performance analysis
 - **Database Inspector**: View SQLite data
 - **Network Tools**: WebSocket traffic monitoring
+# Migration Summary (Bluetooth → WiFi)
+
+## ✅ ToolEase: Bluetooth Removed - WiFi Restored
+
+### Summary of Changes
+- All Bluetooth code and dependencies removed from both ESP32 and Flutter
+- WebSocket over WiFi is now the only communication method
+- ESP32 creates a WiFi Access Point (ToolEase_RFID)
+- Tablet connects to ESP32 WiFi and communicates via WebSocket (port 81)
+- All screens, providers, and services updated to use WebSocket
+- Documentation and troubleshooting updated for WiFi workflow
+
+### Key Improvements
+- Simpler setup (no Bluetooth pairing)
+- Faster and more reliable connection
+- Auto-reconnect on disconnect
+- Clearer connection status in app
+- Better range and performance
+
+### How to Use
+1. Upload ESP32 firmware
+2. Connect tablet to ToolEase_RFID WiFi
+3. Launch ToolEase app
+4. Look for green WiFi icon
+5. Scan RFID tags as usual
+
+### For full details, see the sections above and the [WiFi Setup](#installation--setup) and [Testing & Validation](#testing--validation) checklists.
 
 ---
 

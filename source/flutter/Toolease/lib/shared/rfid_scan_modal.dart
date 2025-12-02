@@ -106,7 +106,9 @@ class RFIDScanModal {
 
     // Start scanning
     try {
+      print('[RfidScanModal] Calling websocketService.scanRFID()...');
       scannedTagId = await websocketService.scanRFID(timeout: timeout);
+      print('[RfidScanModal] scanRFID returned: $scannedTagId');
       
       if (context.mounted && isScanning) {
         Navigator.of(context).pop(); // Close modal on success/timeout
@@ -121,6 +123,7 @@ class RFIDScanModal {
         }
       }
     } catch (e) {
+      print('[RfidScanModal] ERROR: $e');
       if (context.mounted && isScanning) {
         Navigator.of(context).pop(); // Close modal
         _showErrorDialog(

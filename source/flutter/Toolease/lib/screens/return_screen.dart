@@ -190,36 +190,7 @@ class _ReturnScreenState extends ConsumerState<ReturnScreen> {
   Future<models.ItemCondition?> _showConditionDialog(models.Item item) async {
     return showDialog<models.ItemCondition>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Item Condition: ${item.toolName}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Serial: ${item.serialNo}'),
-            const SizedBox(height: 16),
-            const Text(
-              'Select condition:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            ...models.ItemCondition.values.map((condition) => RadioListTile<models.ItemCondition>(
-              title: Text(_getConditionDisplayName(condition)),
-              subtitle: Text(_getConditionDescription(condition)),
-              value: condition,
-              groupValue: models.ItemCondition.good,
-              onChanged: (value) => Navigator.pop(context, value),
-              contentPadding: EdgeInsets.zero,
-            )),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
+      builder: (context) => _ConditionDialog(item: item),
     );
   }
 
@@ -749,5 +720,85 @@ class _ReturnScreenState extends ConsumerState<ReturnScreen> {
         ],
       ),
     );
+  }
+}
+
+// Stateful dialog for selecting item condition
+class _ConditionDialog extends StatefulWidget {
+  final models.Item item;
+
+  const _ConditionDialog({required this.item});
+
+  @override
+  State<_ConditionDialog> createState() => _ConditionDialogState();
+}
+
+class _ConditionDialogState extends State<_ConditionDialog> {
+  models.ItemCondition _selectedCondition = models.ItemCondition.good;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Item Condition: ${widget.item.toolName}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Serial: ${widget.item.serialNo}'),
+          const SizedBox(height: 16),
+          const Text(
+            'Select condition:',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          ...models.ItemCondition.values.map((condition) => RadioListTile<models.ItemCondition>(
+            title: Text(_getConditionDisplayName(condition)),
+            subtitle: Text(_getConditionDescription(condition)),
+            value: condition,
+            groupValue: _selectedCondition,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _selectedCondition = value;
+                });
+              }
+            },
+            contentPadding: EdgeInsets.zero,
+          )),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _selectedCondition),
+          child: const Text('Confirm'),
+        ),
+      ],
+    );
+  }
+
+  String _getConditionDisplayName(models.ItemCondition condition) {
+    switch (condition) {
+      case models.ItemCondition.good:
+        return 'Good';
+      case models.ItemCondition.damaged:
+        return 'Damaged';
+      case models.ItemCondition.lost:
+        return 'Lost';
+    }
+  }
+
+  String _getConditionDescription(models.ItemCondition condition) {
+    switch (condition) {
+      case models.ItemCondition.good:
+        return 'Item in good condition';
+      case models.ItemCondition.damaged:
+        return 'Item has damage';
+      case models.ItemCondition.lost:
+        return 'Item is lost';
+    }
   }
 }

@@ -12,7 +12,7 @@ class WebSocketService {
 
   WebSocketService({
     this.esp32Ip = '192.168.4.1', // ESP32 softAP default IP
-    this.port = 81,
+    this.port = 80, // Changed from 81 to 80 for ESPAsyncWebServer
   });
 
   bool get isConnected => _isConnected && _channel != null;
@@ -22,10 +22,10 @@ class WebSocketService {
     disconnect();
     
     try {
-      print('[WebSocket] Connecting to ws://$esp32Ip:$port');
+      print('[WebSocket] Connecting to ws://$esp32Ip/ws');
       
       _channel = WebSocketChannel.connect(
-        Uri.parse('ws://$esp32Ip:$port'),
+        Uri.parse('ws://$esp32Ip/ws'),
       );
       _broadcastController = StreamController.broadcast();
       
@@ -94,21 +94,28 @@ class WebSocketService {
   Stream<dynamic>? get stream => _broadcastController?.stream;
 
   void sendMessage(String message) {
+    print('[WebSocket] Sending message: $message');
     if (!isConnected) {
+      print('[WebSocket] ERROR: Not connected, cannot send message');
       throw Exception('WebSocket not connected');
     }
     _channel?.sink.add(message);
+    print('[WebSocket] Message sent successfully');
   }
 
   /// Scan RFID with configurable timeout
   /// Returns the RFID tag ID (Serial No.) on success
   /// Throws exception on timeout or connection error
   Future<String> scanRFID({Duration timeout = const Duration(seconds: 20)}) async {
+    print('[WebSocket] scanRFID called, isConnected: $isConnected');
     if (!isConnected) {
+      print('[WebSocket] ERROR: Cannot scan, not connected');
       throw Exception('RFID scanner not connected');
     }
 
+    print('[WebSocket] Sending SCAN_RFID command...');
     sendMessage('SCAN_RFID');
+    print('[WebSocket] SCAN_RFID command sent, waiting for response...');
     final completer = Completer<String>();
     late StreamSubscription sub;
 
