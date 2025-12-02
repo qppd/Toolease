@@ -125,16 +125,26 @@ The side profile demonstrates the device’s thickness, bracket placement, and v
 </p>
 The top view is useful for understanding the layout of ports, buttons, and the RFID antenna’s position.
 
+
 ### 3D Printed Parts & Covers
 
 - **Board Case:** ![Board Case](models/Toolease_Board_Case.png)
+  - Houses the ESP32 and main electronics, providing robust protection and easy access for maintenance.
 - **Bracket:** ![Bracket](models/Toolease_Bracket.png)
+  - Used for mounting the device securely to a wall, table, or enclosure.
 - **Case Cover:** ![Case Cover](models/Toolease_Case_Cover.png)
+  - Protects the internal components and provides a clean, finished look.
 - **Tablet Cover:** ![Tablet Cover](models/Toolease_Tablet_Cover.png)
+  - Custom-fit cover for the tablet, ensuring it stays in place and protected during use.
 - **Port Cover:** ![Port Cover](models/Toolease_Port_Cover.png)
+  - Shields the ESP32’s ports from dust and accidental contact.
+- **Cable Cover:**
+  - ![Cable Cover](models/Toolease_Cable_Cover.stl)
+  - A new addition designed to neatly route and protect power/data cables, preventing tangling and accidental unplugging. The cable cover snaps into place and can be removed for servicing.
 - **All Parts Joined:** ![All Parts](models/Toolease_Rfid_Casing_All_Parts_Joined.png)
+  - Visual reference for how all 3D printed parts fit together in the final assembly.
 
-Each part is designed for easy 3D printing and assembly. The covers and brackets ensure protection, stability, and a professional finish for the device.
+Each part is designed for easy 3D printing and assembly. The covers, brackets, and cable management solutions ensure protection, stability, and a professional, safe finish for the device.
 
 ### Wiring Diagram & Fritzing
 
