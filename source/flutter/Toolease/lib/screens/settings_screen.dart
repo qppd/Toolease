@@ -298,6 +298,8 @@ class SettingsScreen extends ConsumerWidget {
           // Special handling for kiosk mode
           if (settingKey == SettingKeys.enableKioskMode) {
             await KioskService.toggleKioskMode(value);
+            // Invalidate the kiosk mode provider to refresh it
+            ref.invalidate(kioskModeEnabledProvider);
           }
           
           if (context.mounted) {

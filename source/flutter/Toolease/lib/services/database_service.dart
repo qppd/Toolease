@@ -709,4 +709,59 @@ class DatabaseService {
     await _database.delete(_database.borrowItems).go();
     await _database.delete(_database.borrowRecords).go();
   }
+
+  // ============ SETTINGS ============
+
+  Future<String> getSetting(String key, {String defaultValue = 'true'}) async {
+    final setting = await (_database.select(_database.settings)
+          ..where((s) => s.key.equals(key)))
+        .getSingleOrNull();
+
+    if (setting == null) {
+      // Initialize with default value
+      await _database.into(_database.settings).insert(
+            SettingsCompanion(
+              key: Value(key),
+              value: Value(defaultValue),
+            ),
+          );
+      return defaultValue;
+    }
+
+    return setting.value;
+  }
+
+  Future<void> updateSetting(String key, String value) async {
+    final existingSetting = await (_database.select(_database.settings)
+          ..where((s) => s.key.equals(key)))
+        .getSingleOrNull();
+
+    if (existingSetting == null) {
+      await _database.into(_database.settings).insert(
+            SettingsCompanion(
+              key: Value(key),
+              value: Value(value),
+            ),
+          );
+    } else {
+      await (_database.update(_database.settings)
+            ..where((s) => s.key.equals(key)))
+          .write(
+        SettingsCompanion(
+          value: Value(value),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+  }
+
+  Future<Map<String, String>> getAllSettings() async {
+    final settings = await _database.select(_database.settings).get();
+    return {for (final setting in settings) setting.key: setting.value};
+  }
+
+  Future<bool> isScreenEnabled(String screenKey) async {
+    final value = await getSetting(screenKey);
+    return value.toLowerCase() == 'true';
+  }
 }

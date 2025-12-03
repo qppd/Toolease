@@ -1,46 +1,73 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'database_provider.dart';
+import '../models/setting.dart';
 
-// Stub providers for settings functionality
-// TODO: Implement proper settings management for per-unit system
-
-// Provider for kiosk mode - defaults to disabled
+// Provider for kiosk mode - reads from database
 final kioskModeEnabledProvider = FutureProvider<bool>((ref) async {
-  return false; // Kiosk mode disabled by default
+  final dbService = ref.watch(databaseServiceProvider);
+  return await dbService.isScreenEnabled(SettingKeys.enableKioskMode);
 });
 
-// Provider for checking if screen is enabled - defaults to true
+// Provider for checking if register screen is enabled
 final registerScreenEnabledProvider = FutureProvider<bool>((ref) async {
-  return true;
+  final dbService = ref.watch(databaseServiceProvider);
+  return await dbService.isScreenEnabled(SettingKeys.enableRegister);
 });
 
+// Provider for checking if borrow screen is enabled
 final borrowScreenEnabledProvider = FutureProvider<bool>((ref) async {
-  return true;
+  final dbService = ref.watch(databaseServiceProvider);
+  return await dbService.isScreenEnabled(SettingKeys.enableBorrow);
 });
 
+// Provider for checking if return screen is enabled
 final returnScreenEnabledProvider = FutureProvider<bool>((ref) async {
-  return true;
+  final dbService = ref.watch(databaseServiceProvider);
+  return await dbService.isScreenEnabled(SettingKeys.enableReturn);
 });
 
-// Settings notifier stub
+// Settings notifier - manages all settings with database persistence
 class SettingsNotifier extends StateNotifier<AsyncValue<Map<String, String>>> {
   final Ref _ref;
 
-  SettingsNotifier(this._ref) : super(const AsyncValue.data({}));
+  SettingsNotifier(this._ref) : super(const AsyncValue.loading()) {
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    state = const AsyncValue.loading();
+    try {
+      final dbService = _ref.read(databaseServiceProvider);
+      final settings = await dbService.getAllSettings();
+      state = AsyncValue.data(settings);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
 
   Future<void> updateSetting(String key, String value) async {
-    // Stub - does nothing for now
+    try {
+      final dbService = _ref.read(databaseServiceProvider);
+      await dbService.updateSetting(key, value);
+      await refresh();
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
   }
 
   Future<void> updateScreenEnabled(String screenKey, bool enabled) async {
-    // Stub - does nothing for now
+    await updateSetting(screenKey, enabled.toString());
   }
 
   Future<void> toggleScreenAccess(String screenKey) async {
-    // Stub - does nothing for now
+    final currentSettings = state.value ?? {};
+    final currentValue = currentSettings[screenKey] ?? 'true';
+    final newValue = currentValue.toLowerCase() == 'true' ? 'false' : 'true';
+    await updateSetting(screenKey, newValue);
   }
 
   Future<void> refresh() async {
-    // Stub - does nothing for now
+    await _loadSettings();
   }
 }
 
