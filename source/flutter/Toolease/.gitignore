@@ -31,7 +31,10 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+build/  # Exclude build artifacts
+!build/app/outputs/flutter-apk/  # But include APK directory
+!build/app/outputs/flutter-apk/*.apk  # Specifically include APK files
+!build/app/outputs/flutter-apk/*.apk.sha1  # Include SHA1 files
 
 # Symbolication related
 app.*.symbols
