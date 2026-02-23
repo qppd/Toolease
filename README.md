@@ -7,13 +7,6 @@
 
 ---
 
-## 🎉 Project Status: 100% Finished
-
-ToolEase is now fully complete and ready for deployment! All planned features, documentation, and hardware integration have been implemented and thoroughly tested. Thank you to everyone who contributed and supported the project.
-
----
-
-
 ## Table of Contents
 
 - [Overview](#overview)
